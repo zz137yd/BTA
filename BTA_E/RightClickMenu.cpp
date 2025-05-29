@@ -106,7 +106,7 @@ void RightClickMenu::itemsBlock(const QString& path)
         administratorRun->setVisible(isDisk);
         openWithMenu->menuAction()->setVisible(!isDisk);
         compressionMenu->menuAction()->setVisible(!isDisk);
-        collections->setVisible(isDisk);
+        collections->setVisible(!isDisk);
         newCreations->menuAction()->setVisible(!isDisk);
         pathCopy->setVisible(!isDisk);
         shortCut->setVisible(!isDisk);

@@ -29,6 +29,12 @@ MainWindow::MainWindow(QWidget *parent)
     leftView->setSelectionMode(QAbstractItemView::ExtendedSelection);    // Multiple selections possible
     leftView->setItemDelegate(new SpacingDelegate(17, this));
 
+    // Drag event filtering
+    leftView->setAcceptDrops(true);
+    leftView->viewport()->setAcceptDrops(true);
+    leftView->setDragDropMode(QAbstractItemView::DropOnly);
+    leftView->viewport()->installEventFilter(this);
+
     // RightView is only used to display the parent directory of leftview
     // The directory can be expanded
     rightView = new QTreeView(this);
@@ -203,12 +209,10 @@ MainWindow::MainWindow(QWidget *parent)
     connect(darkButton, &QPushButton::clicked, this, &MainWindow::changeDark);
 
 
-    // Favorites drop-down box
+    // Set the favorites to contain only the path
     fButton = new QPushButton(this);
     fButton->setFixedHeight(buttonHeight);
     fButton->setFixedWidth(buttonWidth);
-
-    // Set the favorites to contain only the path
     fButton->setText("Only Path");
 
     font = fButton->font();
@@ -217,6 +221,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     buttonQss(fButton);
 
+    // Favorites drop-down box
     collectComboBox = new QComboBox(this);
     font = collectComboBox->font();
     font.setPointSize(fontSize);
@@ -228,7 +233,7 @@ MainWindow::MainWindow(QWidget *parent)
     collectComboBox->addItem("Leisure");
 
     collectComboBox->setFixedHeight(buttonHeight);
-    collectComboBox->setFixedWidth(buttonWidth);
+    collectComboBox->setFixedWidth(buttonWidth + 1);
     comboboxQss(collectComboBox);
 
     buttonLayout->addWidget(fButton);
@@ -320,6 +325,7 @@ MainWindow::MainWindow(QWidget *parent)
     QShortcut* propertiesShortcut = new QShortcut(QKeySequence(Qt::ALT + Qt::Key_Return), this);
 
     // Display menu when right click triggers
+    connect(leftView, &MyLeftView::filesDropped, this, &MainWindow::handleExternalFilesDropped);
     connect(leftView, &QWidget::customContextMenuRequested, this, &MainWindow::showContextMenu);
 
     // Bind
@@ -339,10 +345,16 @@ MainWindow::MainWindow(QWidget *parent)
     connect(rightClickMenu, &RightClickMenu::createShortcutRequested, this, &MainWindow::createShortCut);
     connect(rightClickMenu, &RightClickMenu::cutRequested, this, &MainWindow::cut);
     connect(rightClickMenu, &RightClickMenu::copyRequested, this, &MainWindow::copy);
-    connect(rightClickMenu, &RightClickMenu::pasteRequested, this, &MainWindow::paste);
-    connect(pasteShortcut, &QShortcut::activated, this, &MainWindow::paste);
+    connect(rightClickMenu, &RightClickMenu::pasteRequested, this, [this]() {
+        paste("");
+    });
+    connect(pasteShortcut, &QShortcut::activated, this, [this]() {
+        paste("");
+    });
     connect(rightClickMenu, &RightClickMenu::recyleBinRequested, this, &MainWindow::toRecyleBin);
-    connect(rightClickMenu, &RightClickMenu::deleteRequested, this, &MainWindow::del);
+    connect(rightClickMenu, &RightClickMenu::deleteRequested, this, [this]() {
+        del(QStringList(), true);
+    });
     connect(rightClickMenu, &RightClickMenu::renameRequested, this, &MainWindow::rename);
     connect(rightClickMenu, &RightClickMenu::propertiesRequested, this, &MainWindow::properties);
     connect(propertiesShortcut, &QShortcut::activated, this, &MainWindow::properties);
@@ -432,6 +444,83 @@ void MainWindow::viewAdjust()
     rightView->setColumnWidth(1, 270);
     rightView->setColumnWidth(2, 100);
     rightView->setColumnWidth(3, 300);
+}
+
+// Drag event filtering
+bool MainWindow::eventFilter(QObject* obj, QEvent* event)
+{
+    if (obj == leftView->viewport()) {
+        if (event->type() == QEvent::DragEnter) {
+            QDragEnterEvent* dragEvent = static_cast<QDragEnterEvent*>(event);
+            // 只有leftPath非空且是文件拖拽才允许
+            if (!leftPath.isEmpty() && dragEvent->mimeData()->hasUrls()) {
+                dragEvent->acceptProposedAction();
+            } else {
+                dragEvent->ignore();
+            }
+            return true;
+        }
+        if (event->type() == QEvent::DragMove) {
+            QDragMoveEvent* dragEvent = static_cast<QDragMoveEvent*>(event);
+            if (!leftPath.isEmpty() && dragEvent->mimeData()->hasUrls()) {
+                dragEvent->acceptProposedAction();
+            } else {
+                dragEvent->ignore();
+            }
+            return true;
+        }
+        if (event->type() == QEvent::Drop) {
+            QDropEvent* dropEvent = static_cast<QDropEvent*>(event);
+            if (!leftPath.isEmpty() && dropEvent->mimeData()->hasUrls()) {
+                QStringList paths;
+                for (const QUrl& url : dropEvent->mimeData()->urls()) {
+                    if (url.isLocalFile())
+                        paths << url.toLocalFile();
+                }
+                QModelIndex idx = leftView->indexAt(dropEvent->pos());
+                QString dstDir;
+                if (idx.isValid() && fileModel->isDir(idx))
+                    dstDir = fileModel->filePath(idx);
+                else
+                    dstDir = fileModel->filePath(leftView->rootIndex());
+
+                clipPaths = paths;
+                clipIsCut = false;
+                rightClickMenu->isCopy = true;
+                paste(dstDir);
+
+                dropEvent->acceptProposedAction();
+            } else {
+                dropEvent->ignore();
+            }
+            return true;
+        }
+    }
+    return QMainWindow::eventFilter(obj, event);
+}
+
+// Drag and paste
+void MainWindow::handleExternalFilesDropped(const QStringList& paths, const QModelIndex& targetIndex)
+{
+    if (paths.isEmpty()) return;
+
+    if (leftPath.isEmpty())
+    {
+        QMessageBox::warning(this, "Unabel to paste", "No valid directory");
+        return;
+    }
+
+    QString dstDir;
+    if (targetIndex.isValid() && fileModel->isDir(targetIndex))
+        dstDir = fileModel->filePath(targetIndex);
+    else
+        dstDir = fileModel->filePath(leftView->rootIndex());
+
+    clipPaths = paths;
+    clipIsCut = false;
+    rightClickMenu->isCopy = true;
+
+    paste(dstDir);
 }
 
 // Update the stack storing the path
@@ -855,6 +944,21 @@ void MainWindow::changeDark()
             QScrollBar::add-line, QScrollBar::sub-line {
                 background: none;
             }
+
+            QDialogButtonBox QPushButton {
+                min-width: 80px;
+                min-height: 28px;
+                padding: 6px 16px;
+                font-size: 11pt;
+                border-radius: 4px;
+                background-color: #3c4b4f;
+                color: #d0e0dc;
+                border: 1px solid #5a6e6a;
+            }
+
+            QDialogButtonBox QPushButton:hover {
+                background-color: #4c5f63;
+            }
         )";
 
         qApp->setStyleSheet(eyeStyle);
@@ -866,6 +970,9 @@ void MainWindow::changeDark()
         buttonQssDark(previewButton);
         buttonQssDark(darkButton);
         buttonQssDark(fButton);
+
+        comboboxQssDark(collectComboBox);
+        comboboxQssDark(sortComboBox);
     }
     else
     {
@@ -879,6 +986,9 @@ void MainWindow::changeDark()
         buttonQss(previewButton);
         buttonQss(darkButton);
         buttonQss(fButton);
+
+        comboboxQss(collectComboBox);
+        comboboxQss(sortComboBox);
     }
 }
 
@@ -931,9 +1041,9 @@ void MainWindow::reloadFavoritesList()
     }
 }
 
-void MainWindow::moveFavorite(QListWidgetItem* item)
+void MainWindow::moveFavorite(const QList<QListWidgetItem*>& items)
 {
-    QString srcPath = item->data(Qt::UserRole).toString();
+    if (items.isEmpty()) return;
 
     QInputDialog dlg(this);
     dlg.setWindowTitle("Move Collection");
@@ -956,27 +1066,64 @@ void MainWindow::moveFavorite(QListWidgetItem* item)
 
     QString dstCategory = dlg.textValue();
 
-    favorites[fCategory].removeAll(srcPath);
-    if (!favorites[dstCategory].contains(srcPath))
-        favorites[dstCategory].append(srcPath);
+    for (QListWidgetItem* item : items)
+    {
+        QString srcPath = item->data(Qt::UserRole).toString();
+        favorites[fCategory].removeAll(srcPath);
+        if (!favorites[dstCategory].contains(srcPath))
+            favorites[dstCategory].append(srcPath);
+    }
 
     saveFavoritesToFile();
     reloadFavoritesList();
 }
 
-void MainWindow::deleteFavorite(QListWidgetItem* item)
+void MainWindow::deleteFavorite(const QList<QListWidgetItem*>& items)
 {
-    QString path = item->data(Qt::UserRole).toString();
+    if (items.isEmpty()) return;
+
+    QStringList names;
+    for (QListWidgetItem* item : items)
+        names << item->text();
+
     auto ret = QMessageBox::question(
         this, "Delete Collection",
-        QString("Are you sure you want to delete“%2”from“%1”?").arg(fCategory, item->text()),
+        QString("Are you sure you want to delete the following from “%1”?\n%2")
+            .arg(fCategory, names.join(", ")),
         QMessageBox::Yes|QMessageBox::No);
 
     if (ret != QMessageBox::Yes) return;
 
-    favorites[fCategory].removeAll(path);
+    for (QListWidgetItem* item : items)
+    {
+        QString path = item->data(Qt::UserRole).toString();
+        favorites[fCategory].removeAll(path);
+    }
     saveFavoritesToFile();
-    reloadFavoritesList();    // Reload and display
+    reloadFavoritesList();
+}
+
+void MainWindow::moveFavorite(QListWidgetItem* item)
+{
+    moveFavorite(QList<QListWidgetItem*>{item});
+}
+
+void MainWindow::deleteFavorite(QListWidgetItem* item)
+{
+    deleteFavorite(QList<QListWidgetItem*>{item});
+}
+
+void MainWindow::favoritesContextMenu(const QPoint& pos)
+{
+    QList<QListWidgetItem*> selectedItems = favoritesList->selectedItems();
+    if (selectedItems.isEmpty()) return;
+
+    QMenu menu;
+    QAction* moveAct = menu.addAction("Move to...");
+    QAction* delAct  = menu.addAction("Delete");
+    QAction* act = menu.exec(favoritesList->viewport()->mapToGlobal(pos));
+    if (act == moveAct) moveFavorite(selectedItems);
+    else if (act == delAct) deleteFavorite(selectedItems);
 }
 
 void MainWindow::favoriteItems(QListWidgetItem* item)
@@ -1008,19 +1155,6 @@ void MainWindow::favoriteItems(QListWidgetItem* item)
         updateButtons(fButtons, fPathStack);
     }
     else QDesktopServices::openUrl(QUrl::fromLocalFile(initialPath));
-}
-
-void MainWindow::favoritesContextMenu(const QPoint& pos)
-{
-    QListWidgetItem* item = favoritesList->itemAt(pos);
-    if (!item) return;
-
-    QMenu menu;
-    QAction* moveAct = menu.addAction("Move to...");
-    QAction* delAct  = menu.addAction("Delete");
-    QAction* act = menu.exec(favoritesList->viewport()->mapToGlobal(pos));
-    if (act == moveAct) moveFavorite(item);
-    else if (act == delAct) deleteFavorite(item);
 }
 
 void MainWindow::upClicked()
@@ -1445,6 +1579,7 @@ void MainWindow::favoritesDialog(const QString& category)
         favoritesList->addItem(item);
     }
     fStack->addWidget(favoritesList);
+    favoritesList->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
     // Right-click menu
     favoritesList->viewport()->installEventFilter(clickFilter);
@@ -1473,6 +1608,8 @@ void MainWindow::favoritesDialog(const QString& category)
         fileView->viewport()->update();
     });
     fileView->setItemDelegateForColumn(1,fSizeDelegate);
+
+    fileView->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
     // Path button
     for (QToolButton* b : fButtons)
@@ -2158,29 +2295,42 @@ void MainWindow::addToFavorites()
 {
     loadFavoritesFromFile();
 
-    QModelIndex index = leftView->currentIndex();
-    if (!index.isValid()) return;
+    // Get all selected items (only take column==0 to prevent duplication)
+    QModelIndexList selected = leftView->selectionModel()->selectedIndexes();
+    QSet<QString> uniquePaths;
+    for (const QModelIndex& idx : selected)
+        if (idx.column() == 0)
+            uniquePaths.insert(fileModel->filePath(idx));
+    if (uniquePaths.isEmpty()) return;
 
-    QString path = fileModel->filePath(index);
-
-    // Use custom QInputDialog object
+    // A dialog box pops up to select a favorite category
     QInputDialog inputDialog(this);
     inputDialog.setWindowTitle("Add to favorites");
     inputDialog.setLabelText("Please select collection category: ");
     inputDialog.setComboBoxItems(categories);
     inputDialog.setComboBoxEditable(false);
+
     // Set a larger font
     font.setFamilies(QStringList() << "Microsoft YaHei" << "Malgun Gothic" << "Segoe UI");
     font.setPointSize(11);
     inputDialog.setFont(font);
-    // Adjust the initial size of the dialog box
     inputDialog.resize(400, 300);
+
+    QComboBox* combo = inputDialog.findChild<QComboBox*>();
+    if (combo)
+    {
+        if (isDarkMode) comboboxQssDark(combo);
+        else comboboxQss(combo);
+        combo->setFont(font);
+    }
 
     if (inputDialog.exec() == QDialog::Accepted)
     {
         QString category = inputDialog.textValue();
         if (category.isEmpty()) return;
-        collect(category, path);
+        // Add all selected files/folders in batches
+        for (const QString& path : uniquePaths)
+            collect(category, path);
     }
 }
 
@@ -2618,13 +2768,13 @@ void FileCopyTask::doCopy()
     emit finished(true, QString());
 }
 
-void MainWindow::paste()
+void MainWindow::paste(const QString& dir)
 {
     leftView->setFocus();
     if (clipPaths.isEmpty()) return;
 
     // Target Directory
-    QString dstDir;
+    QString dstDir = dir;
     QModelIndexList selected = leftView->selectionModel()->selectedIndexes();
     if (!selected.isEmpty())
         dstDir = QFileInfo(fileModel->filePath(selected.first())).absolutePath();
@@ -2752,7 +2902,7 @@ void MainWindow::paste()
         {
             if (clipIsCut)
             {
-                clipPaths.clear();
+                del(srcs, false);
                 clipIsCut = false;
             }
             updateRightView();
@@ -2776,7 +2926,7 @@ void MainWindow::paste()
             {
                 if (clipIsCut)
                 {
-                    clipPaths.clear();
+                    del(srcs, false);
                     clipIsCut = false;
                 }
                 updateRightView();
@@ -2984,7 +3134,126 @@ void MainWindow::toRecyleBin()
     thread->start();
 }
 
-void MainWindow::del()
+void MainWindow::del(const QStringList& paths, bool needConfirm)
+{
+    // Collect the paths of files/folders to be deleted uniformly
+    QStringList filesToDelete;
+    if (paths.isEmpty())
+    {
+        // Delete Selected Items
+        QModelIndexList selected = leftView->selectionModel()->selectedIndexes();
+        QSet<QString> uniquePaths;
+        for (const QModelIndex& idx : selected)
+        {
+            if (idx.column() == 0)
+                uniquePaths.insert(fileModel->filePath(idx));
+        }
+        filesToDelete = uniquePaths.values();
+    }
+    else
+        filesToDelete = paths;
+    if (filesToDelete.isEmpty()) return;
+
+    // Statistics
+    QStringList names;
+    qint64 totalSize = 0;
+    for (const QString& p : filesToDelete)
+    {
+        QFileInfo fi(p);
+        names << fi.fileName();
+        if (fi.isDir())
+        {
+            QDirIterator it(p, QDir::Files | QDir::NoDotAndDotDot | QDir::Dirs, QDirIterator::Subdirectories);
+            while (it.hasNext())
+            {
+                QFileInfo sfi(it.next());
+                if (sfi.isFile()) totalSize += sfi.size();
+            }
+        }
+        else
+            totalSize += fi.size();
+    }
+
+    if (needConfirm)
+    {
+        QString info = names.join(", ");
+        auto btn = QMessageBox::question(this, "Delete",
+                    QString("Confirm deletion of the following items: \n%1").arg(info),
+                    QMessageBox::Yes | QMessageBox::No);
+        if (btn != QMessageBox::Yes) return;
+    }
+
+    // Asynchronous deletion task
+    QThread* thread = new QThread;
+    FileDeleteTask* worker = new FileDeleteTask(filesToDelete, totalSize);
+    worker->moveToThread(thread);
+
+    QDialog* dialog = nullptr;
+    QProgressBar* progressBar = nullptr;
+    QLabel* label = nullptr;
+
+    if (totalSize > 4.7 * 1024 * 1024 * 1024)
+    {
+        dialog = new QDialog(this);
+        dialog->setWindowTitle("Deleting...");
+        dialog->setWindowFlags(Qt::Window | Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
+        dialog->setWindowModality(Qt::NonModal);
+        dialog->resize(500, 120);
+
+        QVBoxLayout* layout = new QVBoxLayout(dialog);
+        label = new QLabel("Deleting...");
+        progressBar = new QProgressBar(dialog);
+        progressBar->setRange(0, 100);
+        layout->addWidget(label);
+        layout->addWidget(progressBar);
+
+        dialog->show();
+
+        connect(worker, &FileDeleteTask::progress, this, [=](qint64 deleted, qint64 total) {
+            int percent = total > 0 ? int(100.0 * deleted / total) : 0;
+            progressBar->setValue(percent);
+            dialog->adjustSize();
+        });
+    }
+    else
+    {
+        dialog = new QDialog(this);
+        dialog->setWindowTitle("Deleting...");
+        dialog->setWindowFlags(Qt::Window | Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
+        dialog->setWindowModality(Qt::NonModal);
+        dialog->resize(400, 90);
+
+        QVBoxLayout* layout = new QVBoxLayout(dialog);
+        label = new QLabel("Deleting...");
+        layout->addWidget(label);
+
+        dialog->show();
+    }
+
+    // Display current file name in real time
+    connect(worker, &FileDeleteTask::currentFile, this, [=](const QString& filename) {
+        label->setText(QString("Deleting: %1").arg(filename));
+        dialog->setFixedHeight(170);
+        dialog->adjustSize();
+        if (dialog->width() > 800)
+            dialog->resize(800, dialog->width());
+    });
+
+    connect(thread, &QThread::started, [=]() { worker->doDelete(false); });
+    connect(worker, &FileDeleteTask::finished, this, [=](bool success, const QString &err) {
+        if (dialog) dialog->close();
+        if (!success) QMessageBox::warning(this, "Deletion failed", err);
+        else updateRightView();
+        thread->quit();
+        thread->wait();
+        worker->deleteLater();
+        thread->deleteLater();
+        if (dialog) dialog->deleteLater();
+    });
+    thread->start();
+}
+
+/*void MainWindow::del(const QStringList& paths)
 {
     QModelIndexList selected = leftView->selectionModel()->selectedIndexes();
     QModelIndexList files;
@@ -3085,7 +3354,7 @@ void MainWindow::del()
         if (dialog) dialog->deleteLater();
     });
     thread->start();
-}
+}*/
 
 // Rename
 void MainWindow::rename()

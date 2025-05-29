@@ -2,8 +2,12 @@
 #define UTILS_H
 
 // 1.Only double-clicking the left button will work
+// Support receiving dragged files
 #include <QTreeView>
 #include <QMouseEvent>
+#include <QDropEvent>
+#include <QDragEnterEvent>
+#include <QMimeData>
 
 // 2.Center, left and right alignment
 #include <QStyledItemDelegate>
@@ -31,13 +35,57 @@ class MyLeftView : public QTreeView
 {
     Q_OBJECT
 public:
-    explicit MyLeftView(QWidget* parent = nullptr) : QTreeView(parent) {}
+    explicit MyLeftView(QWidget* parent = nullptr) : QTreeView(parent)
+    {
+        // Support receiving dragged files
+        setAcceptDrops(true);
+        setDragDropMode(QAbstractItemView::DropOnly);
+    }
+
+signals:
+    void filesDropped(const QStringList& paths, const QModelIndex& targetIndex);
 
 protected:
     void mouseDoubleClickEvent(QMouseEvent* event) override
     {
         if (event->button() == Qt::LeftButton) QTreeView::mouseDoubleClickEvent(event);
         //else event->ignore();
+    }
+
+    void dragEnterEvent(QDragEnterEvent* event) override
+    {
+        if (event->mimeData()->hasUrls())
+            event->acceptProposedAction();
+        else
+            QTreeView::dragEnterEvent(event);
+    }
+
+    void dragMoveEvent(QDragMoveEvent* event) override
+    {
+        if (event->mimeData()->hasUrls())
+            event->acceptProposedAction();
+        else
+            QTreeView::dragMoveEvent(event);
+    }
+
+    void dropEvent(QDropEvent* event) override
+    {
+        if (event->mimeData()->hasUrls())
+        {
+            QStringList paths;
+            for (const QUrl& url : event->mimeData()->urls())
+            {
+                if (url.isLocalFile())
+                    paths << url.toLocalFile();
+            }
+            QModelIndex targetIndex = indexAt(event->pos());
+            emit filesDropped(paths, targetIndex);
+            event->acceptProposedAction();
+        }
+        else
+        {
+            QTreeView::dropEvent(event);
+        }
     }
 };
 
@@ -141,7 +189,7 @@ inline void comboboxQss(QComboBox* box)
             background-color: #ffffff;
             border: 1px solid #e0e0e0;
             border-radius: 6px;
-            padding: 8px 16px;
+            padding: 8px 7px 8px 16px;
             font-size: 11pt;
             color: #424242;
             selection-background-color: #2196F3;
@@ -183,16 +231,77 @@ inline void comboboxQss(QComboBox* box)
             margin: 8px 0;
         }
         QComboBox::down-arrow {
-            image: url(:/up.png);
+            image: url(:/up-1.png);
             width: 17px;
             height: 17px;
-            margin-right: 30px;
+            margin-right: 27px;
             margin-top: 2px;
         }
         QComboBox::down-arrow:on {
-            image: url(:/down.png);
+            image: url(:/down-1.png);
         }
                        )");
+}
+
+inline void comboboxQssDark(QComboBox* box)
+{
+    box->setStyleSheet(R"(
+        QComboBox {
+            background-color: #3c4b4f;
+            border: 1px solid #5a6e6a;
+            border-radius: 6px;
+            padding: 8px 7px 8px 16px;
+            font-size: 11pt;
+            color: #d0e0dc;
+            selection-background-color: #4c5f63;
+            selection-color: #ffffff;
+        }
+        QComboBox:hover {
+            border: 1px solid #7a8e8a;
+            background-color: #4c5f63;
+            /* box-shadow: 0 2px 5px rgba(0,0,0,0.3); */
+        }
+        QComboBox:focus {
+            border-color: #2196F3;
+            outline: none;
+            /* box-shadow: 0 0 8px rgba(33,150,243,0.4); */
+        }
+        QComboBox::drop-down {
+            background-color: transparent;
+            width: 30px;
+        }
+        QComboBox QAbstractItemView {
+            border: none;
+            background-color: #2e3b3f;
+            selection-background-color: #4c5f63;
+            selection-color: #ffffff;
+            outline: none;
+            /* box-shadow: 0 2px 5px rgba(0,0,0,0.25); */
+        }
+        QComboBox QAbstractItemView::item {
+            padding: 12px 20px;
+            color: #d0e0dc;
+            font-weight: 400;
+        }
+        QComboBox QAbstractItemView::item:hover {
+            background-color: #3c4b4f;
+        }
+        QComboBox QAbstractItemView::separator {
+            height: 1px;
+            background-color: #5a6e6a;
+            margin: 8px 0;
+        }
+        QComboBox::down-arrow {
+            image: url(:/up-2.png);
+            width: 17px;
+            height: 17px;
+            margin-right: 27px;
+            margin-top: 2px;
+        }
+        QComboBox::down-arrow:on {
+            image: url(:/down-2.png);
+        }
+    )");
 }
 
 // 5.Image preview adaptation

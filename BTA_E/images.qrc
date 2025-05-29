@@ -1,16 +1,18 @@
 <RCC>
     <qresource prefix="/">
-        <file>down.png</file>
         <file>file.png</file>
         <file>left-1.png</file>
         <file>left-2.png</file>
         <file>refresh.png</file>
         <file>right-1.png</file>
         <file>right-2.png</file>
-        <file>up.png</file>
         <file>ztk.ico</file>
         <file>ztk.jpg</file>
         <file>directory.png</file>
         <file>folder.png</file>
+        <file>down-1.png</file>
+        <file>up-1.png</file>
+        <file>up-2.png</file>
+        <file>down-2.png</file>
     </qresource>
 </RCC>

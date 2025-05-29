@@ -113,6 +113,9 @@ public:
     static bool moveToRecycleBin(const QString& path);
 
 private slots:
+    // Support drag
+    void handleExternalFilesDropped(const QStringList& paths, const QModelIndex& targetIndex);
+
     // Prefix function
     void updateStack(const QString& path, QStack<QString>& stack);
     void updateButtons(QVector<QToolButton*>& bs, QStack<QString>& stack);
@@ -143,8 +146,8 @@ private slots:
     // Collect
     void onlyPath();
 
-    void favoriteItems(QListWidgetItem* item);
     void favoritesContextMenu(const QPoint& pos);
+    void favoriteItems(QListWidgetItem* item);
 
     void upClicked();
     void downClicked();
@@ -182,9 +185,9 @@ private slots:
     void createShortCut();
     void cut();
     void copy();
-    void paste();
+    void paste(const QString& dir);
     void toRecyleBin();
-    void del();
+    void del(const QStringList& paths, bool needConfirm);
     void rename();
     void properties();
 
@@ -210,9 +213,12 @@ private:
 
     // File System
     QFileSystemModel* fileModel;
-    QTreeView* leftView;
+    MyLeftView* leftView;
     QTreeView* rightView;
     SizeProgressDelegate* sizeDelegate;
+
+    // When in disk directory, cannot drag and paste
+    bool eventFilter(QObject* obj, QEvent* event) override;
 
     // Font
     QFont font;
@@ -292,6 +298,9 @@ private:
     void reloadFavoritesList();
     void moveFavorite(QListWidgetItem* item);
     void deleteFavorite(QListWidgetItem* item);
+    // Batch Operations
+    void moveFavorite(const QList<QListWidgetItem*>& items);
+    void deleteFavorite(const QList<QListWidgetItem*>& items);
 
     // File sort
     QComboBox* sortComboBox;
