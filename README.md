@@ -19,8 +19,6 @@ Qt version : 5.14.2
 > Include four favorites: **work**, **personal**, **key**, and **leisure** for easy access.  
 > You can regard Favorites as a small file manager.
 
-
-
 ### 📊 Size Progress Bar
 > Clearly see the size of each file and folder.  
 > The first load takes a few seconds, then displays immediately with only new files calculated.
