@@ -312,6 +312,7 @@ private:
     void moveFavorite(QListWidgetItem* item);
     void deleteFavorite(QListWidgetItem* item);
 
+    void copyFavoritePath(const QList<QListWidgetItem*>& selectedItems);
     // 批量操作
     void moveFavorite(const QList<QListWidgetItem*>& items);
     void deleteFavorite(const QList<QListWidgetItem*>& items);

@@ -1113,6 +1113,31 @@ void MainWindow::reloadFavoritesList()
     }
 }
 
+void MainWindow::copyFavoritePath(const QList<QListWidgetItem*>& selectedItems)
+{
+    if (selectedItems.isEmpty()) return;
+
+    QStringList paths;
+    for (QListWidgetItem* item : selectedItems)
+    {
+        QString path = item->data(Qt::UserRole).toString();
+        if (!path.isEmpty()) paths << path;
+    }
+
+    if (!paths.isEmpty())
+    {
+        QString allPaths = paths.join("\n");
+        QClipboard* clipboard = QApplication::clipboard();
+        clipboard->setText(allPaths);
+
+        QString message = (paths.size() == 1) ?
+            QString("已复制路径 : %1").arg(paths.first()) :
+            QString("已复制 %1 个文件路径").arg(paths.size());
+
+        QToolTip::showText(QCursor::pos(), message, favoritesList, QRect(), 2000);
+    }
+}
+
 void MainWindow::moveFavorite(const QList<QListWidgetItem*>& items)
 {
     if (items.isEmpty()) return;
@@ -1196,9 +1221,11 @@ void MainWindow::favoritesContextMenu(const QPoint& pos)
     QMenu menu;
     QAction* moveAct = menu.addAction("移动");
     QAction* delAct  = menu.addAction("删除");
+    QAction* copyPathAct = menu.addAction("复制路径");
     QAction* act = menu.exec(favoritesList->viewport()->mapToGlobal(pos));
     if (act == moveAct) moveFavorite(selectedItems);
     else if (act == delAct) deleteFavorite(selectedItems);
+    else if (act == copyPathAct) copyFavoritePath(selectedItems);
 }
 
 void MainWindow::favoriteItems(QListWidgetItem* item)
@@ -1573,6 +1600,7 @@ void MainWindow::handleFSearchFinished()
             QListWidgetItem* item = new QListWidgetItem(fi.fileName());
             item->setData(Qt::UserRole, path);
             item->setIcon(QIcon(fi.isDir() ? ":/folder.png" : ":/file.png"));
+            item->setToolTip(path);
             favoritesList->addItem(item);
         }
     }
@@ -1588,6 +1616,7 @@ void MainWindow::handleFSearchFinished()
             item->setText(path);
             item->setData(path, Qt::UserRole);
             item->setIcon(fi.isDir() ? QIcon(":/folder.png") : QIcon(":/file.png"));
+            item->setToolTip(path);
             fSearchModel->appendRow(item);
         }
         fileView->setModel(fSearchModel);
@@ -1677,6 +1706,7 @@ void MainWindow::favoritesDialog(const QString& category)
     // 收藏列表（QListWidget）
     favoritesList = new QListWidget;
     favoritesList->setFont(fdFont);
+    favoritesList->setMouseTracking(true);    // 启用鼠标追踪
 
     QStringList favPaths = favorites.value(fCategory);
     for (const QString& path : favPaths)
@@ -1795,6 +1825,13 @@ void MainWindow::favoritesDialog(const QString& category)
     connect(favoritesList, &QListWidget::itemDoubleClicked, this, &MainWindow::favoriteItems);
     connect(favoritesList, &QListWidget::customContextMenuRequested,
             this, &MainWindow::favoritesContextMenu);
+    connect(favoritesList, &QListWidget::itemEntered, this, [](QListWidgetItem* item) {
+        if (item)
+        {
+            QString path = item->data(Qt::UserRole).toString();
+            item->setToolTip(path);    // 提示完整路径
+        }
+    });
 
     connect(fSearchEdit, &QLineEdit::returnPressed, this, &MainWindow::fSearch);
     connect(&fSearchWatcher, &QFutureWatcher<QStringList>::finished,
@@ -2004,6 +2041,7 @@ void MainWindow::showContextMenu(const QPoint& pos)
         {
             QClipboard* clipboard = QApplication::clipboard();
             clipboard->setText(path);
+            QToolTip::showText(QCursor::pos(), QString("已复制 : %1").arg(path));
         }
         return;
     }
@@ -2796,7 +2834,7 @@ void MainWindow::copyFilePath()
                  ? static_cast<QWidget*>(favoritesDialogPtr)
                  : this;
 
-    QToolTip::showText(QCursor::pos(), "文件路径已复制", p);
+    QToolTip::showText(QCursor::pos(), QString("已复制 : %1").arg(path), p);
 }
 
 // 跨平台快捷方式
