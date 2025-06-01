@@ -7,7 +7,7 @@ Download the latest BTA English version : [1.0](https://github.com/zz137yd/BTA/r
 
 Download the latest BTA Chinese version : [1.0](https://github.com/zz137yd/BTA/releases/tag/C-1.0)
 
-***
+---
 
 ## 1.Favorites mechanism
 Include four favorites: work, personal, key, and leisure, for easy access.You can regard Favorites as a small file manager.
