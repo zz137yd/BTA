@@ -1,31 +1,36 @@
-# BTA
-Windows file manager, used together with Windows' own file explorer.
+# 🔧 BTA
 
 Qt version : 5.14.2
 
-Download the latest BTA English version : [1.0](https://github.com/zz137yd/BTA/releases/tag/E-1.0)
+> 🖥️ **A powerful Windows file manager** designed to work seamlessly with Windows' native file explorer.
 
-Download the latest BTA Chinese version : [1.0](https://github.com/zz137yd/BTA/releases/tag/C-1.0)
+---
 
+## 📥 Download
 
+| 🌍 Language | 📦 Version | 🔗 Link |
+|-------------|------------|---------|
+| 🇺🇸 English | 1.0 | [Download](https://github.com/zz137yd/BTA/releases/tag/E-1.0) |
+| 🇨🇳 Chinese | 1.0 | [下载](https://github.com/zz137yd/BTA/releases/tag/C-1.0) |
 
-## 1.Favorites mechanism
-Include four favorites: work, personal, key, and leisure, for easy access.You can regard Favorites as a small file manager.
+---
 
+### 📌 Favorites Mechanism
+> Include four favorites: **work**, **personal**, **key**, and **leisure** for easy access.  
+> You can regard Favorites as a small file manager.
 
+### 📊 Size Progress Bar
+> Clearly see the size of each file and folder.  
+> The first load takes a few seconds, then displays immediately with only new files calculated.
 
-## 2.Size progress bar
-Clearly see the size of each file and folder.
+### 📁 Dual File Views
+> The left side is used for various operations, and the right side view shows the parent directory.
 
-The first load takes a few seconds, then it will be displayed immediately and only the size of new files will be calculated. The user experience is not bad.
-
-
-
-## 3.Dual file views
-The left side is used for various operations, and the right side view is the parent directory on the left.
-
-
-
-## 4.Performance
-After testing, the i5-9600KF can run smoothly. 
-In addition to the 6-core 6-thread CPU, I also plan to test the feasibility of running BTA on 4-core 8-thread, 4-core 4-thread, 2-core 4-thread, and FX series CPUs.
+### ⚡ Performance
+> **Tested on i5-9600KF** - runs smoothly  
+> 
+> **Planned testing for:**
+> - 4-core 8-thread CPUs
+> - 4-core 4-thread CPUs  
+> - 2-core 4-thread CPUs
+> - FX series CPUs
