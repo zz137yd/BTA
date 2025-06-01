@@ -2141,9 +2141,14 @@ void MainWindow::administratorOpen()
     openAsAdmin = true;
 
     if (contextMenuView == leftView)
+    {
         leftView_doubleClicked(contextMenuIndex);
+    }
     else if (contextMenuView == fileView)
+    {
         fileView_doubleClicked(contextMenuIndex);
+    }
+    openAsAdmin = false;
 }
 
 // Open with
