@@ -7,24 +7,24 @@ Download the latest BTA English version : [1.0](https://github.com/zz137yd/BTA/r
 
 Download the latest BTA Chinese version : [1.0](https://github.com/zz137yd/BTA/releases/tag/C-1.0)
 
-##
+
 
 ## 1.Favorites mechanism
 Include four favorites: work, personal, key, and leisure, for easy access.You can regard Favorites as a small file manager.
 
----
+
 
 ## 2.Size progress bar
 Clearly see the size of each file and folder.
 
 The first load takes a few seconds, then it will be displayed immediately and only the size of new files will be calculated. The user experience is not bad.
 
----
+
 
 ## 3.Dual file views
 The left side is used for various operations, and the right side view is the parent directory on the left.
 
----
+
 
 ## 4.Performance
 After testing, the i5-9600KF can run smoothly. 
