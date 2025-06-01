@@ -1,5 +1,5 @@
 # BTA
-Windows File Management
+Windows file manager, used together with Windows' own file explorer.
 
 Download the latest BTA Chinese version : [1.0](https://github.com/zz137yd/BTA/releases/tag/E-1.0)
 
