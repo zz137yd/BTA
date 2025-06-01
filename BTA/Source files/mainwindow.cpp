@@ -9,29 +9,29 @@ MainWindow::MainWindow(QWidget *parent)
     QThreadPool::globalInstance()->setMaxThreadCount(2);
 
     this->resize(1600, 900);
-    this->setWindowTitle("BTA   ----    Before important operation, remember to backup！");
+    this->setWindowTitle("BTA   ----    在做重要操作前，记得备份！");
 
-    // Centerpiece
+    // 中心部件
     centralWidget = new QWidget(this);
     setCentralWidget(centralWidget);
 
-    // File Display
+    // 文件显示
     fileModel = new MyFileSystemModelEx(this);
     fileModel->setFilter(QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden);
     fileModel->setRootPath(rootPath);
 
-    // leftView is set to open folders and files only when you double-click the left button
+    // leftView设置了只有左键双击才能打开文件夹和文件
     leftView = new MyLeftView(this);
     leftView->setModel(fileModel);
-    leftView->setRootIndex(fileModel->index(rootPath));                  // The default displayed path
-    leftView->setExpandsOnDoubleClick(false);                            // Disable double click to expand
-    leftView->setContextMenuPolicy(Qt::CustomContextMenu);               // Enable custom right-click menu
-    // Set the column width strategy to leave space on the right side of the last column
+    leftView->setRootIndex(fileModel->index(rootPath));                  // 默认显示的路径
+    leftView->setExpandsOnDoubleClick(false);                            // 禁止双击展开
+    leftView->setContextMenuPolicy(Qt::CustomContextMenu);               // 启用自定义右键菜单
+    // 设置列宽策略，在最后一列右侧留出空间
     leftView->header()->setStretchLastSection(false);
-    leftView->setSelectionMode(QAbstractItemView::ExtendedSelection);    // Multiple selections possible
+    leftView->setSelectionMode(QAbstractItemView::ExtendedSelection);    // 可多选
     leftView->setItemDelegate(new SpacingDelegate(17, this));
 
-    // Drag event filtering
+    // 拖拽事件过滤
     leftView->setDragEnabled(true);
     leftView->setAcceptDrops(true);
     //leftView->viewport()->setAcceptDrops(true);
@@ -40,33 +40,36 @@ MainWindow::MainWindow(QWidget *parent)
     leftView->setDragDropMode(QAbstractItemView::DragDrop);
     //leftView->viewport()->installEventFilter(this);
 
-    // RightView is only used to display the parent directory of leftview
-    // The directory can be expanded
+    // rightView只用来显示leftview的上级目录以及可以展开目录
     rightView = new QTreeView(this);
     rightView->setModel(fileModel);
     rightView->setRootIndex(fileModel->index(rootPath));
     rightView->setContextMenuPolicy(Qt::CustomContextMenu);
     rightView->setItemDelegate(new SpacingDelegate(17, this));
 
-    // Set the displayed font
+    // 设置显示的字体
     //font.setFamily("Segoe UI");
     //font.setFamilies({"Microsoft YaHei", "Malgun Gothic"});
     font.setFamilies(QStringList() << "Microsoft YaHei" << "Malgun Gothic" << "Segoe UI");
     leftView->setFont(font);
     rightView->setFont(font);
 
-    // Set the column width strategy to leave space on the right side of the last column
+    // 设置列宽策略，在最后一列右侧留出空间
     leftView->header()->setStretchLastSection(false);
     rightView->header()->setStretchLastSection(false);
 
-    // Adjust file display
-    viewAdjust();
-
-    // Allow users to resize column widths
+    // 允许用户调整列宽
     leftView->header()->setSectionsMovable(true);
     rightView->header()->setSectionsMovable(true);
 
-    // Draw progress bar
+    // 调整文件显示
+    viewAdjust();
+
+    // 允许用户调整列宽
+    leftView->header()->setSectionsMovable(true);
+    rightView->header()->setSectionsMovable(true);
+
+    // 绘制进度条
     sizeDelegate = new SizeProgressDelegate(fileModel, this);
     sizeDelegate->loadCacheFromFile("");
     connect(sizeDelegate, &SizeProgressDelegate::requestUpdate, [this]() {
@@ -76,10 +79,10 @@ MainWindow::MainWindow(QWidget *parent)
     leftView->setItemDelegateForColumn(1, sizeDelegate);
     rightView->setItemDelegateForColumn(1, sizeDelegate);
 
-    // Save interface configuration
+    // 保存界面配置
     savedHeaderState = leftView->header()->saveState();
 
-    // Double-click to open the binding, click to preview
+    // 绑定双击打开, 单击预览
     //connect(leftView, &QTreeView::doubleClicked, this, &MainWindow::leftView_doubleClicked);
     connect(leftView, &QTreeView::doubleClicked, this, [this](const QModelIndex &idx){
         if (isSearch)
@@ -91,11 +94,11 @@ MainWindow::MainWindow(QWidget *parent)
             leftView_doubleClicked(idx);
     });
 
-    // Forward and Back buttons
+    // 前进后退按钮
     backButton = new QPushButton(this);
     forwardButton = new QPushButton(this);
 
-    // Set to selectable state
+    // 设置为可选中的状态
     backButton->setCheckable(true);
     forwardButton->setCheckable(true);
 
@@ -107,7 +110,7 @@ MainWindow::MainWindow(QWidget *parent)
     backButton->setIcon(QIcon(":/left-1.png"));
     forwardButton->setIcon(QIcon(":/right-1.png"));
 
-    // Button style
+    // 按钮样式
     QString style = "QPushButton { background-color: transparent; border: none; }";
     backButton->setStyleSheet(style);
     forwardButton->setStyleSheet(style);
@@ -120,7 +123,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(forwardButton, &QPushButton::clicked, this, &MainWindow::forwardClicked);
 
 
-    // Refresh button
+    // 刷新按钮
     refreshButton = new QPushButton(this);
     refreshButton->setFixedHeight(buttonHeight);
     refreshButton->setFixedWidth(74);
@@ -132,12 +135,12 @@ MainWindow::MainWindow(QWidget *parent)
     connect(refreshButton, &QPushButton::clicked, this, &MainWindow::refreshView);
 
 
-    // Path buttons
+    // 路径按钮
     for (int i = 0; i < 7; ++i)
     {
         QToolButton* button = new QToolButton(this);
 
-        // Button size changes with path length
+        // 按钮长度随路径长度变化
         button->setFixedWidth(defaultPathButtonWidth);
         button->setFixedHeight(buttonHeight);
         button->setToolButtonStyle(Qt::ToolButtonTextOnly);
@@ -157,17 +160,17 @@ MainWindow::MainWindow(QWidget *parent)
         buttons.push_back(button);
         buttonLayout->addWidget(button);
     }
-    // Add a stretchable whitespace
+    // 添加一个可伸缩的空白区域
     buttonLayout->addStretch();
 
 
-    // Button to copy the path
+    // 复制路径按钮
     copyPathButton = new QPushButton(this);
     copyPathButton->setFixedHeight(buttonHeight);
     copyPathButton->setFixedWidth(buttonWidth);
-    copyPathButton->setText("Copy path");
+    copyPathButton->setText("复制路径");
 
-    // Set font
+    // 设置字体
     font = copyPathButton->font();
     font.setPointSize(fontSize);
     copyPathButton->setFont(font);
@@ -178,17 +181,17 @@ MainWindow::MainWindow(QWidget *parent)
     connect(copyPathButton, &QPushButton::clicked, this, &MainWindow::copyPath);
 
 
-    // Whether preview
+    // 是否预览
     previewButton = new QPushButton(this);
     previewButton->setFixedHeight(buttonHeight);
     previewButton->setFixedWidth(227);
-    previewButton->setText("Preview Disabled");
+    previewButton->setText("关闭预览");
 
     font = previewButton->font();
     font.setPointSize(fontSize);
     previewButton->setFont(font);
 
-    // Preview is turned off by default
+    // 默认关闭预览
     isPreview = false;
 
     buttonQss(previewButton);
@@ -197,11 +200,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(previewButton, &QPushButton::clicked, this, &MainWindow::preview);
 
 
-    // Dark mode
+    // 深色模式
     darkButton = new QPushButton();
     darkButton->setFixedHeight(buttonHeight);
     darkButton->setFixedWidth(buttonWidth);
-    darkButton->setText("Dark Mode");
+    darkButton->setText("深色模式");
 
     font = darkButton->font();
     font.setPointSize(fontSize);
@@ -213,11 +216,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(darkButton, &QPushButton::clicked, this, &MainWindow::changeDark);
 
 
-    // Set the favorites to contain only the path
+    // 设置收藏夹内只有路径
     fButton = new QPushButton(this);
     fButton->setFixedHeight(buttonHeight);
     fButton->setFixedWidth(buttonWidth);
-    fButton->setText("Only Path");
+    fButton->setText("仅路径");
 
     font = fButton->font();
     font.setPointSize(fontSize);
@@ -225,16 +228,16 @@ MainWindow::MainWindow(QWidget *parent)
 
     buttonQss(fButton);
 
-    // Favorites drop-down box
+    // 分类收藏下拉框
     collectComboBox = new QComboBox(this);
     font = collectComboBox->font();
     font.setPointSize(fontSize);
     collectComboBox->setFont(font);
 
-    collectComboBox->addItem("Work");
-    collectComboBox->addItem("Personal");
-    collectComboBox->addItem("Key");
-    collectComboBox->addItem("Leisure");
+    collectComboBox->addItem("工作");
+    collectComboBox->addItem("个人");
+    collectComboBox->addItem("重要");
+    collectComboBox->addItem("休闲");
 
     collectComboBox->setFixedHeight(buttonHeight);
     collectComboBox->setFixedWidth(buttonWidth + 1);
@@ -247,44 +250,44 @@ MainWindow::MainWindow(QWidget *parent)
     connect(collectComboBox, QOverload<const QString&>::of(&QComboBox::activated), this, &MainWindow::favoritesDialog);
 
 
-    // File sort
+    // 文件排序
     sortComboBox = new QComboBox(this);
     font = sortComboBox->font();
     font.setPointSize(fontSize);
     sortComboBox->setFont(font);
 
-    sortComboBox->addItem("Name");
-    sortComboBox->addItem("Size");
-    sortComboBox->addItem("Creation time");
-    sortComboBox->addItem("Modification time");
-    sortComboBox->addItem("Type");
+    sortComboBox->addItem("名称");
+    sortComboBox->addItem("大小");
+    sortComboBox->addItem("创建时间");
+    sortComboBox->addItem("修改时间");
+    sortComboBox->addItem("类型");
 
     sortComboBox->insertSeparator(sortComboBox->count());
-    sortComboBox->addItem("Descending");
-    sortComboBox->addItem("Ascending");
-    sortComboBox->addItem("Default");
+    sortComboBox->addItem("降序");
+    sortComboBox->addItem("升序");
+    sortComboBox->addItem("默认");
 
     sortComboBox->setFixedHeight(buttonHeight);
     sortComboBox->setFixedWidth(200);
     comboboxQss(sortComboBox);
 
-    // Initialize the mapping table
-    sortMap["Name"] = 0;
-    sortMap["Size"] = 1;
-    sortMap["Creation time"] = fileModel->columnCount() - 2;
-    sortMap["Modification time"] = fileModel->columnCount() - 1;
-    sortMap["Type"] = 2;
+    // 初始化映射表
+    sortMap["名称"] = 0;
+    sortMap["大小"] = 1;
+    sortMap["创建时间"] = fileModel->columnCount() - 2;
+    sortMap["修改时间"] = fileModel->columnCount() - 1;
+    sortMap["类型"] = 2;
 
-    currentSort = "Name";
+    currentSort = "名字";
     currentOrder = Qt::AscendingOrder;
 
     buttonLayout->addWidget(sortComboBox);
     connect(sortComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &MainWindow::fileSort);
 
 
-    // Search
+    // 搜索
     searchEdit = new QLineEdit(this);
-    searchEdit->setPlaceholderText("Search in folder");
+    searchEdit->setPlaceholderText("在文件夹内搜索");
     searchEdit->setFixedHeight(buttonHeight);
     searchEdit->setFixedWidth(194);
 
@@ -303,12 +306,12 @@ MainWindow::MainWindow(QWidget *parent)
             this, &MainWindow::handleSearchFinished);
 
 
-    // Right-click menu
+    // 右键菜单
     leftView->setContextMenuPolicy(Qt::CustomContextMenu);
     rightClickMenu = new RightClickMenu(this);
-    categories = QStringList({"Work", "Personal", "Key", "Leisure"});
+    categories = QStringList({"工作", "个人", "重要", "休闲"});
 
-    // shortcut key
+    // 快捷键
     this->addAction(rightClickMenu->getRefresh());
     this->addAction(rightClickMenu->getCollections());
     this->addAction(rightClickMenu->getNewDirectory());
@@ -328,11 +331,11 @@ MainWindow::MainWindow(QWidget *parent)
 
     QShortcut* propertiesShortcut = new QShortcut(QKeySequence(Qt::ALT + Qt::Key_Return), this);
 
-    // Display menu when right click triggers
+    // 右键触发时显示菜单
     connect(leftView, &MyLeftView::filesDropped, this, &MainWindow::handleExternalDropped);
     connect(leftView, &QWidget::customContextMenuRequested, this, &MainWindow::showContextMenu);
 
-    // Bind
+    // 绑定
     connect(rightClickMenu, &RightClickMenu::refreshRequested, this, &MainWindow::refreshInterface);
     connect(rightClickMenu, &RightClickMenu::openFileRequested, this, &MainWindow::openFile);
     connect(rightClickMenu, &RightClickMenu::administratorRequested, this, &MainWindow::administratorOpen);
@@ -369,11 +372,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(rightClickMenu, &RightClickMenu::propertiesRequested, this, &MainWindow::properties);
     connect(propertiesShortcut, &QShortcut::activated, this, &MainWindow::properties);
 
-    // File perview
+    // 文件预览
     connect(leftView, &QTreeView::clicked, this, &MainWindow::previewFile);
 
 
-    // Overall layout
+    // 整体布局
     splitter = new QSplitter(Qt::Horizontal, this);
     splitter->addWidget(leftView);
     splitter->addWidget(rightView);
@@ -390,45 +393,49 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-// All interface style adjustments
+// 所有界面样式调整
 void MainWindow::interfaceStyle()
 {
-    // Set the column width strategy to leave space on the right side of the last column
+    // 设置列宽策略，在最后一列右侧留出空间
     leftView->header()->setStretchLastSection(false);
     rightView->header()->setStretchLastSection(false);
 
-    // leftView is set to open folders and files only when you double-click the left button
+    // leftView设置了只有左键双击才能打开文件夹和文件
     leftView = new MyLeftView(this);
     leftView->setModel(fileModel);
     leftView->setRootIndex(fileModel->index(rootPath));
-    leftView->setExpandsOnDoubleClick(false);                            // Disable double click to expand
-    leftView->setContextMenuPolicy(Qt::CustomContextMenu);               // Enable custom right-click menu
-    leftView->setSelectionMode(QAbstractItemView::ExtendedSelection);    // Multiple selections possible
+    leftView->setExpandsOnDoubleClick(false);                            // 无法双击展开
+    leftView->setContextMenuPolicy(Qt::CustomContextMenu);               // 启用自定义右键菜单
+    leftView->setSelectionMode(QAbstractItemView::ExtendedSelection);    // 可多选
     leftView->setItemDelegate(new SpacingDelegate(17, this));
 
-    // RightView is only used to display the parent directory of leftview
-    // The directory can be expanded
+    // rightView只用来显示leftview的上级目录以及可以展开目录
     rightView = new QTreeView(this);
     rightView->setModel(fileModel);
     rightView->setRootIndex(fileModel->index(rootPath));
     rightView->setContextMenuPolicy(Qt::CustomContextMenu);
     rightView->setItemDelegate(new SpacingDelegate(17, this));
 
-    // Set the displayed font
+    // 设置显示的字体
     //font.setFamily("Segoe UI");
     //font.setFamilies({"Microsoft YaHei", "Malgun Gothic"});
     font.setFamilies(QStringList() << "Microsoft YaHei" << "Malgun Gothic" << "Segoe UI");
     leftView->setFont(font);
     rightView->setFont(font);
 
-    // Allow users to resize column widths
+    // 允许用户调整列宽
     leftView->header()->setSectionsMovable(true);
     rightView->header()->setSectionsMovable(true);
 
-    // Adjust file display
+    // 调整文件显示
     viewAdjust();
 
-    // Draw progress bar
+    // 显示区域某列居中对齐
+    /*CenterAlignDelegate* delegate = new CenterAlignDelegate(this);
+    leftView->setItemDelegateForColumn(1, delegate);
+    rightView->setItemDelegateForColumn(1, delegate);*/
+
+    // 绘制进度条
     sizeDelegate = new SizeProgressDelegate(fileModel, this);
     sizeDelegate->loadCacheFromFile("");
     connect(sizeDelegate, &SizeProgressDelegate::requestUpdate, [this]() {
@@ -439,7 +446,7 @@ void MainWindow::interfaceStyle()
     rightView->setItemDelegateForColumn(1, sizeDelegate);
 }
 
-// Adjust each column in file display area
+// 调整文件显示区域每列的宽度
 void MainWindow::viewAdjust()
 {
     leftView->header()->moveSection(leftView->header()->visualIndex(3), 1);
@@ -457,7 +464,7 @@ void MainWindow::viewAdjust()
     rightView->setColumnWidth(3, 300);
 }
 
-// Drag event filtering
+// 拖拽事件过滤
 bool MainWindow::eventFilter(QObject* obj, QEvent* event)
 {
     if (obj == leftView->viewport())
@@ -466,7 +473,7 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
         {
             QDragEnterEvent* dragEvent = static_cast<QDragEnterEvent*>(event);
 
-            // Only allowed if leftPath is not empty and the file is dragged
+            // 只有leftPath非空且是文件拖拽才允许
             if (!leftPath.isEmpty() && dragEvent->mimeData()->hasUrls())
                 dragEvent->acceptProposedAction();
             else
@@ -514,7 +521,7 @@ bool MainWindow::eventFilter(QObject* obj, QEvent* event)
     return QMainWindow::eventFilter(obj, event);
 }
 
-// Drag and paste
+// 拖拽粘贴
 void MainWindow::handleExternalDropped(const QStringList& paths, const QModelIndex& targetIndex)
 {
     if (paths.isEmpty()) return;
@@ -552,7 +559,7 @@ void MainWindow::handleExternalDropped(const QStringList& paths, const QModelInd
     paste(dstDir);
 }
 
-// Update the stack storing the path
+// 更新存储路径的栈
 void MainWindow::updateStack(const QString& path, QStack<QString>& stack)
 {
     QStringList seg = path.split("/", QString::SkipEmptyParts);
@@ -570,7 +577,7 @@ void MainWindow::updateStack(const QString& path, QStack<QString>& stack)
         int ps = stack.size();
         int ss = seg.size();
 
-        // Continue to add paths
+        // 继续增加路径
         if (ss > ps)
         {
             for (int i = ps; i < ss; ++i)
@@ -578,9 +585,9 @@ void MainWindow::updateStack(const QString& path, QStack<QString>& stack)
                 stack.push("/" + seg[i]);
             }
         }
-        // Handling Fallback
-        // If go back to the root directory, there is "" in the stack, and its length is 1
-        // After clicking into a disk, the seg length is 1, and the same situation needs to be handled
+        // 处理回退
+        // 如果回退到根目录, 栈中有""，长度为1
+        // 点击进入一个磁盘后, seg长度为1, 要处理相同的情况
         else
         {
             if (!stack.isEmpty())
@@ -593,7 +600,7 @@ void MainWindow::updateStack(const QString& path, QStack<QString>& stack)
     }
 }
 
-// Update path button
+// 更新路径按钮
 void MainWindow::updateButtons(QVector<QToolButton*>& bs, QStack<QString>& stack)
 {
     if (stack.size() == 1 && stack.top().isEmpty())
@@ -619,7 +626,7 @@ void MainWindow::updateButtons(QVector<QToolButton*>& bs, QStack<QString>& stack
         QString seg = segments.at(i);
         if (seg.startsWith("/")) seg = seg.mid(1);
 
-        // Calculate the current path length and adjust the button width in real time
+        // 计算当前路径长度并实时调整按钮宽度
         int currentWidth = metrics.boundingRect(seg).width();
         int buttonWidth = defaultPathButtonWidth;
 
@@ -640,7 +647,7 @@ void MainWindow::updateButtons(QVector<QToolButton*>& bs, QStack<QString>& stack
     }
 }
 
-// Update right area
+// 更新右边区域
 void MainWindow::updateRightView()
 {
     QModelIndex leftRoot = leftView->rootIndex();
@@ -653,7 +660,7 @@ void MainWindow::updateRightView()
     rightView->setRootIndex(fileModel->index(rightPath));
 }
 
-// Double click
+// 双击
 void MainWindow::leftView_doubleClicked(const QModelIndex &index)
 {
     backFlag = false;
@@ -688,7 +695,7 @@ void MainWindow::leftView_doubleClicked(const QModelIndex &index)
         {
             bool success = false;
 #ifdef Q_OS_WIN
-            // Get file association program
+            // 获取文件关联程序
             QString appPath = getAssociatedSW(filePath);
             if (!appPath.isEmpty())
             {
@@ -705,10 +712,10 @@ void MainWindow::leftView_doubleClicked(const QModelIndex &index)
     }
 }
 
-// Back button
+// 后退按钮
 void MainWindow::backClicked()
 {
-    // Return to the main program interface from the search interface
+    // 从搜索界面回到主程序
     if (isSearch)
     {
         leftView->setModel(fileModel);
@@ -748,7 +755,7 @@ void MainWindow::backClicked()
     updateButtons(buttons, pathStack);
 }
 
-// Forward button
+// 前进按钮
 void MainWindow::forwardClicked()
 {
     if (backFlag)
@@ -784,7 +791,7 @@ void MainWindow::forwardClicked()
     }
 }
 
-// Refresh
+// 刷新
 void MainWindow::refreshView()
 {
     if (!fileModel) return;
@@ -794,7 +801,7 @@ void MainWindow::refreshView()
         QString leftRootPath = fileModel->filePath(leftView->rootIndex());
         QString rightRootPath = fileModel->filePath(rightView->rootIndex());
 
-        // Clear the cache (clears only the current directory and its subdirectories)
+        // 清理缓存
         if (sizeDelegate)
         {
             QHash<QString, qint64>& cache = const_cast<QHash<QString, qint64>&>(sizeDelegate->getSizeCache());
@@ -813,7 +820,7 @@ void MainWindow::refreshView()
             }
         }
 
-        // Refresh main program view
+        // 刷新主程序视图
         leftView->setRootIndex(fileModel->index(leftRootPath));
         leftView->viewport()->update();
 
@@ -824,7 +831,7 @@ void MainWindow::refreshView()
     {
         QString fileRootPath = fileModel->filePath(fileView->rootIndex());
 
-        // Clear the cache (clears only the current directory and its subdirectories)
+        // 清理缓存
         if (sizeDelegate)
         {
             QHash<QString, qint64>& cache = const_cast<QHash<QString, qint64>&>(sizeDelegate->getSizeCache());
@@ -843,13 +850,13 @@ void MainWindow::refreshView()
             }
         }
 
-        // Rresh favorites file view
+        // 刷新收藏夹视图
         fileView->setRootIndex(fileModel->index(fileRootPath));
         fileView->viewport()->update();
     }
 }
 
-// Click path button
+// 点击路径按钮
 void MainWindow::pathClicked()
 {
     QToolButton* button = qobject_cast<QToolButton*>(sender());
@@ -904,7 +911,7 @@ void MainWindow::pathClicked()
     updateButtons(buttons, pathStack);
 }
 
-// Copy current path
+// 复制当前路径
 void MainWindow::copyPath()
 {
     QString currentPath;
@@ -919,26 +926,27 @@ void MainWindow::copyPath()
     {
         clipboard = QApplication::clipboard();
         clipboard->setText(currentPath);
-        QToolTip::showText(QCursor::pos(), "Have copyed", this);
+        QToolTip::showText(QCursor::pos(), "已复制", this);
     }
 }
 
-// Whether to enable preview
+// 是否开启预览
 void MainWindow::preview()
 {
     if (isPreview)
     {
         isPreview = false;
-        previewButton->setText("Preview Disabled");
+        previewButton->setText("关闭预览");
     }
     else
     {
         isPreview = true;
-        previewButton->setText("Preview Enabled");
+        previewButton->setText("预览");
     }
 }
 
-// Dark mode
+
+// 深色模式
 void MainWindow::changeDark()
 {
     isDarkMode = !isDarkMode;
@@ -947,8 +955,8 @@ void MainWindow::changeDark()
     {
         QString eyeStyle = R"(
             QWidget {
-                background-color: #2e3b3f;    /* Dark green gray */
-                color: #d0e0dc;               /* Soft light green with white text */
+                background-color: #2e3b3f;    /* 深绿灰色 */
+                color: #d0e0dc;               /* 柔和的浅绿色，带有白色文字 */
             }
 
             QPushButton {
@@ -1028,7 +1036,7 @@ void MainWindow::changeDark()
         qApp->setStyleSheet(eyeStyle);
         backButton->setIcon(QIcon(":/left-2.png"));
         forwardButton->setIcon(QIcon(":/right-2.png"));
-        darkButton->setText("Normal Mode");
+        darkButton->setText("正常模式");
 
         buttonQssDark(copyPathButton);
         buttonQssDark(previewButton);
@@ -1044,7 +1052,7 @@ void MainWindow::changeDark()
         qApp->setStyleSheet("");
         backButton->setIcon(QIcon(":/left-1.png"));
         forwardButton->setIcon(QIcon(":/right-1.png"));
-        darkButton->setText("Dark Mode");
+        darkButton->setText("深色模式");
 
         buttonQss(copyPathButton);
         buttonQss(previewButton);
@@ -1056,7 +1064,7 @@ void MainWindow::changeDark()
     }
 }
 
-// Open Favorites
+// 打开收藏夹
 void MainWindow::onlyPath()
 {
     if (isOnlyPath) isOnlyPath = false;
@@ -1110,8 +1118,8 @@ void MainWindow::moveFavorite(const QList<QListWidgetItem*>& items)
     if (items.isEmpty()) return;
 
     QInputDialog dlg(favoritesDialogPtr);
-    dlg.setWindowTitle("Move Collection");
-    dlg.setLabelText("Please select the target favorites : ");
+    dlg.setWindowTitle("移动收藏");
+    dlg.setLabelText("请选择目标收藏夹 : ");
     dlg.setComboBoxItems(categories);
     dlg.setComboBoxEditable(false);
 
@@ -1154,8 +1162,8 @@ void MainWindow::deleteFavorite(const QList<QListWidgetItem*>& items)
 
     auto ret = QMessageBox::question(
         favoritesDialogPtr,
-        "Delete Collection",
-        QString("Are you sure you want to delete the following from “%1”?\n%2")
+        "删除收藏",
+        QString("您确定要从 “%1” 删除 \n %2 吗?")
             .arg(fCategory, names.join(", ")),
         QMessageBox::Yes|QMessageBox::No);
 
@@ -1186,8 +1194,8 @@ void MainWindow::favoritesContextMenu(const QPoint& pos)
     if (selectedItems.isEmpty()) return;
 
     QMenu menu;
-    QAction* moveAct = menu.addAction("Move to...");
-    QAction* delAct  = menu.addAction("Delete");
+    QAction* moveAct = menu.addAction("移动");
+    QAction* delAct  = menu.addAction("删除");
     QAction* act = menu.exec(favoritesList->viewport()->mapToGlobal(pos));
     if (act == moveAct) moveFavorite(selectedItems);
     else if (act == delAct) deleteFavorite(selectedItems);
@@ -1259,23 +1267,21 @@ void MainWindow::upClicked()
 
     QDir dir(fPath);
 
-    // Determine whether the current path is included in initialPath
+    // 判断当前路径是否包含在initialPath中
     QString normInit = QDir::cleanPath(initialPath);
     QString normCur = QDir::cleanPath(fPath);
 
-    // Split into directory hierarchies
+    // 分割为目录层级
     QStringList initParts = normInit.split('/', Qt::SkipEmptyParts);
     QStringList curParts = normCur.split('/', Qt::SkipEmptyParts);
 
-    // If the current path is not a subdirectory of initialPath
-    // or the level is shallower
-    // return to the favorites list
+    // 如果当前路径不是 initialPath 的子目录，或层级更浅，则回到收藏列表
     bool flag = (!normCur.startsWith(normInit) || curParts.size() < initParts.size());
 
     if (fPath == initialPath || flag)
     {
         fPath = "";
-        fLabel->setText(QString("Favorite list : %1").arg(fCategory));
+        fLabel->setText(QString("收藏夹 : %1").arg(fCategory));
         fLabel->show();
 
         upButton->installEventFilter(buttonFilter);
@@ -1367,12 +1373,12 @@ void MainWindow::fileView_doubleClicked(const QModelIndex& index)
 #ifdef Q_OS_WIN
         if (info.isDir())
         {
-            // Open the folder with Explorer
+            // 用资源管理器打开文件夹
             QProcess::startDetached("explorer.exe", QStringList() << QDir::toNativeSeparators(path));
         }
         else if (info.isFile())
         {
-            // The "Open With" dialog box pops up
+            // 弹出“打开方式”对话框
             QString command = QString("rundll32.exe shell32.dll,OpenAs_RunDLL %1").arg(QDir::toNativeSeparators(path));
             QProcess::startDetached(command);
         }
@@ -1403,7 +1409,7 @@ void MainWindow::fileView_doubleClicked(const QModelIndex& index)
             {
                 bool success = false;
 #ifdef Q_OS_WIN
-                // Get file association program
+                // 获取文件关联程序
                 QString appPath = getAssociatedSW(path);
                 if (!appPath.isEmpty())
                 {
@@ -1415,7 +1421,7 @@ void MainWindow::fileView_doubleClicked(const QModelIndex& index)
                 success = (system(QString("pkexec bash -c '%1'").arg(cmd).toUtf8()) == 0);
 #endif
                 if (!success)
-                    QMessageBox::warning(this, "Error", "Unable to open the file with administrator privileges");
+                    QMessageBox::warning(this, "错误", "无法以管理员权限打开文件");
             }
             else
             {
@@ -1477,12 +1483,12 @@ void MainWindow::fSearch()
 
     const QString key = fSearchEdit->text().trimmed();
 
-    // If keyword is empty, restore the original list/view
+    // 如果关键字为空，则恢复原始列表/视图
     if (key.isEmpty())
     {
         isFSearch = false;
 
-        // If currently in favorites list, reload all favorites
+        // 如果当前在收藏夹列表中，则重新加载所有收藏夹
         if (fStack->currentWidget() == favoritesList)
         {
             reloadFavoritesList();
@@ -1494,7 +1500,7 @@ void MainWindow::fSearch()
                 b->setEnabled(false);
             }
         }
-        // If in file view, reuse the main program search to clear
+        // 如果在文件视图中，请复用主程序搜索来清除
         else
         {
             fileView->setModel(fileModel);
@@ -1505,20 +1511,20 @@ void MainWindow::fSearch()
         return;
     }
 
-    // If still running, cancel
+    // 如果仍在运行，取消
     if (fSearchWatcher.isRunning())
     {
         fSearchWatcher.cancel();
         fSearchWatcher.waitForFinished();
     }
 
-    // Distinguish between favorites list and file view
+    // 区分收藏夹列表和文件视图
     if (fStack->currentWidget() == favoritesList)
     {
-        // Get all paths of the current category
+        // 获取当前类别的所有路径
         QStringList all = favorites.value(fCategory);
 
-        // Asynchronous filtering, keep the chapter names containing keywords
+        // 异步过滤，保留章节名包含关键词
         auto future = QtConcurrent::run([all, key]()
         {
             QStringList matched;
@@ -1559,7 +1565,7 @@ void MainWindow::handleFSearchFinished()
 
     if (fStack->currentWidget() == favoritesList)
     {
-        // In favorites list mode, refresh favoritesList
+        // 收藏夹列表下, 刷新favorites list
         favoritesList->clear();
         for (const QString& path : results)
         {
@@ -1572,7 +1578,7 @@ void MainWindow::handleFSearchFinished()
     }
     else
     {
-        // In file view mode, refresh fileView
+        // 文件视图下，刷新file view
         fSearchModel->clear();
         fSearchModel->setHorizontalHeaderLabels({("Results")});
         for (const QString& path : results)
@@ -1587,7 +1593,7 @@ void MainWindow::handleFSearchFinished()
         fileView->setModel(fSearchModel);
         fileView->setItemDelegate(new SpacingDelegate(17, this));
 
-        // Adaptive length
+        // 自适应长度
         if (fileView->header())
             fileView->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     }
@@ -1600,18 +1606,17 @@ void MainWindow::closeEvent(QCloseEvent* event)
     QMainWindow::closeEvent(event);
 }
 
-// Main favorites function
 void MainWindow::favoritesDialog(const QString& category)
 {
     loadFavoritesFromFile();
     fPathStack.clear();
 
     fDialog = new QDialog(nullptr);
-    fDialog ->setWindowTitle(QString("Collections - %1").arg(fCategory));
+    fDialog ->setWindowTitle(QString("收藏夹 - %1").arg(fCategory));
     fDialog ->resize(1600, 900);
     fDialog ->setMinimumSize(1024, 768);
 
-    // Ability to drag and drop files between the favorites dialog and the main program
+    // 能够在收藏夹对话框和主程序之间拖放文件
     //fDialog->setWindowFlags(fDialog->windowFlags() | Qt::WindowStaysOnTopHint);
 
     favoritesDialogPtr = fDialog;
@@ -1629,14 +1634,14 @@ void MainWindow::favoritesDialog(const QString& category)
 
     auto* clickFilter = new RightClickDoubleClickFilter(this);
 
-    // A label to display the current path
-    fLabel = new QLabel(QString("Favorites list : %1").arg(fCategory));
+    // 用于显示当前路径的标签
+    fLabel = new QLabel(QString("收藏夹列表 : %1").arg(fCategory));
     fdFont = fLabel->font();
     fdFont.setPointSize(11);
     fdFont.setFamilies(QStringList() << "Microsoft YaHei" << "Malgun Gothic" << "Segoe UI");
     fLabel->setFont(fdFont);
 
-    // Up and down buttons, hidden by default
+    // 上级下级按钮, 默认隐藏
     upButton = new QPushButton();
     downButton = new QPushButton();
 
@@ -1666,10 +1671,10 @@ void MainWindow::favoritesDialog(const QString& category)
         downButton->setDefault(false);
     }
 
-    // Use the stack widget to manage two views: favorites list and file view
+    // 使用堆栈Widget管理两种视图：收藏列表和文件视图
     fStack = new QStackedWidget;
 
-    // Favorites list (QListWidget)
+    // 收藏列表（QListWidget）
     favoritesList = new QListWidget;
     favoritesList->setFont(fdFont);
 
@@ -1695,21 +1700,21 @@ void MainWindow::favoritesDialog(const QString& category)
     fStack->addWidget(favoritesList);
     favoritesList->setSelectionMode(QAbstractItemView::ExtendedSelection);
 
-    // Right-click menu
+    // 右键菜单
     favoritesList->viewport()->installEventFilter(clickFilter);
     favoritesList->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    // File view (QTreeView)
+    // 文件视图（QTreeView）
     fileView = new MyFileView;
     fileView->setModel(fileModel);
     fileView->setFont(fdFont);
     fStack->addWidget(fileView);
     fileView->setContextMenuPolicy(Qt::CustomContextMenu);
 
-    // Adjust the display style
+    // 调整显示样式
     favoritesView();
 
-    // Able to drag and drop
+    // 能拖拽
     fileView->setDragEnabled(true);
     fileView->setAcceptDrops(true);
     fileView->setDropIndicatorShown(true);
@@ -1722,7 +1727,7 @@ void MainWindow::favoritesDialog(const QString& category)
     }
     funcLayout->addWidget(fLabel);
 
-    // Progress bar
+    // 进度条
     fSizeDelegate = new SizeProgressDelegate(fileModel, fDialog);
     fSizeDelegate->loadCacheFromFile("");
     connect(fSizeDelegate, &SizeProgressDelegate::requestUpdate, [this]() {
@@ -1734,7 +1739,7 @@ void MainWindow::favoritesDialog(const QString& category)
     fileView->header()->setStretchLastSection(false);
     fileView->header()->setSectionsMovable(true);
 
-    // Path button
+    // 路径按钮
     for (QToolButton* b : fButtons)
     {
         funcLayout->removeWidget(b);
@@ -1767,7 +1772,7 @@ void MainWindow::favoritesDialog(const QString& category)
     }
     funcLayout->addStretch();
 
-    // Search
+    // 搜索
     fSearchEdit = new QLineEdit();
     fSearchEdit->setFixedHeight(buttonHeight);
     fSearchEdit->setFixedWidth(470);
@@ -1786,7 +1791,7 @@ void MainWindow::favoritesDialog(const QString& category)
 
     fileView->viewport()->installEventFilter(clickFilter);
 
-    // Bind
+    // 绑定
     connect(favoritesList, &QListWidget::itemDoubleClicked, this, &MainWindow::favoriteItems);
     connect(favoritesList, &QListWidget::customContextMenuRequested,
             this, &MainWindow::favoritesContextMenu);
@@ -1801,7 +1806,7 @@ void MainWindow::favoritesDialog(const QString& category)
     connect(upButton, &QPushButton::clicked, this, &MainWindow::upClicked);
     connect(downButton, &QPushButton::clicked, this, &MainWindow::downClicked);
 
-    // Short-cut key
+    // 快捷键
     QShortcut* fAddToFavorites = new QShortcut(QKeySequence(Qt::CTRL + Qt::Key_T), fDialog);
     connect(fAddToFavorites , &QShortcut::activated, this, [this]() {
         this->contextMenuView = fileView;
@@ -1868,35 +1873,34 @@ void MainWindow::favoritesDialog(const QString& category)
     fDialog ->show();
 }
 
-// File sort
+// 文件排序
 void MainWindow::fileSort()
 {
     QString selectedText = sortComboBox->currentText();
 
-    if (selectedText == "Default")
+    if (selectedText == "默认")
     {
-        currentSort = "Name";
+        currentSort = "文件名";
         currentOrder = Qt::AscendingOrder;
     }
 
     if (sortMap.contains(selectedText)) currentSort = selectedText;
 
-    if (selectedText == "Descending") currentOrder = Qt::DescendingOrder;
+    if (selectedText == "降序") currentOrder = Qt::DescendingOrder;
 
-    if (selectedText == "Ascending") currentOrder = Qt::AscendingOrder;
+    if (selectedText == "升序") currentOrder = Qt::AscendingOrder;
 
     fileModel->sort(sortMap[currentSort], currentOrder);
     return;
 }
 
-// Search
+// 搜索
 void MainWindow::search()
 {
-    // Search only if leftPath is not empty
-    // Skipped disk search
+    // 仅当 leftPath 不为空时搜索, 跳过磁盘搜索
     if (leftPath.isEmpty()) return;
 
-    // Read keywords
+    // 读取关键字
     QString key = searchEdit->text().trimmed();
     if (key.isEmpty())
     {
@@ -1915,14 +1919,14 @@ void MainWindow::search()
         return;
     }
 
-    // If the previous search is still running, cancel it
+    // 如果之前的搜索仍在运行，取消掉
     if (searchWatcher.isRunning())
     {
         searchWatcher.cancel();
         searchWatcher.waitForFinished();
     }
 
-    // Asynchronously traverse the current directory and its subdirectories
+    // 异步遍历当前目录及其子目录
     auto future = QtConcurrent::run([path = leftPath, key]()
     {
         QStringList matched;
@@ -1947,7 +1951,7 @@ void MainWindow::handleSearchFinished()
     QStringList results = searchWatcher.result();
 
     searchModel->clear();
-    searchModel->setHorizontalHeaderLabels({("Results")});
+    searchModel->setHorizontalHeaderLabels({("结果")});
 
     for (const QString& path : results)
     {
@@ -1964,17 +1968,17 @@ void MainWindow::handleSearchFinished()
     leftView->setModel(searchModel);
     leftView->setItemDelegate(new SpacingDelegate(27, this));
 
-    // Adaptive length
+    // 自适应长度
     if (leftView->header())
         leftView->header()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
 
     isSearch = true;
 }
 
-// Calling custom right-click menu
+// 调用自定义右键菜单
 void MainWindow::showContextMenu(const QPoint& pos)
 {
-    // Identify which view it is
+    // 识别是哪个视图
     QAbstractItemView* senderView = qobject_cast<QAbstractItemView*>(sender());
     if (!senderView) return;
     QModelIndex index = senderView->indexAt(pos);
@@ -1982,7 +1986,7 @@ void MainWindow::showContextMenu(const QPoint& pos)
     contextMenuView = senderView;
     contextMenuIndex = index;
 
-    // Determine whether it is search mode
+    // 判断是否是搜索模式
     if (isSearch || (senderView == fileView && isFSearch))
     {
         if (!index.isValid()) return;
@@ -1994,7 +1998,7 @@ void MainWindow::showContextMenu(const QPoint& pos)
             path = index.data(Qt::UserRole).toString();
 
         QMenu menu;
-        QAction* copyPathAction = menu.addAction("Copy path");
+        QAction* copyPathAction = menu.addAction("复制路径");
         QAction* sel = menu.exec(senderView->viewport()->mapToGlobal(pos));
         if (sel == copyPathAction)
         {
@@ -2004,7 +2008,7 @@ void MainWindow::showContextMenu(const QPoint& pos)
         return;
     }
 
-    // Set currentContextIndex according to senderView
+    // 根据 senderView 设置 currentContextIndex
     if (index.isValid())
     {
         currentContextIndex = index;
@@ -2031,30 +2035,30 @@ void MainWindow::showContextMenu(const QPoint& pos)
     rightClickMenu->exec(senderView->viewport()->mapToGlobal(pos));
 }
 
-// Get the file association application path
+// 获取文件关联应用程序路径
 QString MainWindow::getAssociatedSW(const QString& path)
 {
     QFileInfo fi(path);
     QString ext = fi.suffix();
 
-    // Get associated programs from the registry
+    // 从注册表中获取关联程序
     QSettings regExt(QString("HKEY_CLASSES_ROOT\\.%1").arg(ext), QSettings::NativeFormat);
     QString typeName = regExt.value("Default").toString();
 
     QSettings regCmd(QString("HKEY_CLASSES_ROOT\\%1\\shell\\open\\command").arg(typeName), QSettings::NativeFormat);
     QString cmd = regCmd.value("Default").toString();
 
-    // Parsing command templates
+    // 解析命令
     cmd.replace("\"%1\"", "\"%2\"").replace("%1", "%2");
     cmd = cmd.arg(fi.absoluteFilePath());
 
-    // Extractor program path
+    // 提取程序路径
     QRegularExpression exeRegex("^\"?(.+?\\.exe)");
     QRegularExpressionMatch match = exeRegex.match(cmd);
     return match.hasMatch() ? match.captured(1) : "";
 }
 
-// Run the program with elevated privileges
+// 提权运行程序
 bool MainWindow::runAsAdmin(const QString& path, const QString& params)
 {
     SHELLEXECUTEINFO sei;
@@ -2069,13 +2073,13 @@ bool MainWindow::runAsAdmin(const QString& path, const QString& params)
     {
         DWORD err = GetLastError();
         if (err == ERROR_CANCELLED)
-            qDebug() << "User canceled the UAC prompt";
+            qDebug() << "用户取消UAC提示";
         return false;
     }
     return true;
 }
 
-// Copy the entire directory for zipping and pasting
+// 复制一整个目录用作压缩和粘贴
 void MainWindow::copyDirectory(const QString& srcPath, const QString& dstPath)
 {
     QDir srcDir(srcPath);
@@ -2085,7 +2089,7 @@ void MainWindow::copyDirectory(const QString& srcPath, const QString& dstPath)
     if (!dstDir.exists())
         QDir().mkpath(dstPath);
 
-    // List all files and subdirectories
+    // 列出所有文件和子目录
     QFileInfoList entries = srcDir.entryInfoList(
         QDir::AllEntries | QDir::NoDotAndDotDot);
     for (const QFileInfo& fi : entries)
@@ -2099,7 +2103,7 @@ void MainWindow::copyDirectory(const QString& srcPath, const QString& dstPath)
     }
 }
 
-// Clear Clipping Status
+// 清除剪切状态
 void MainWindow::clearCutStateIfNeeded()
 {
     if (!clipIsCut) return;
@@ -2115,13 +2119,14 @@ void MainWindow::clearCutStateIfNeeded()
         fileView->viewport()->update();
 }
 
-// Refresh
+
+// 刷新
 void MainWindow::refreshInterface()
 {
     refreshView();
 }
 
-// Open
+// 打开
 void MainWindow::openFile()
 {
     if (!contextMenuView || !contextMenuIndex.isValid()) return;
@@ -2134,7 +2139,7 @@ void MainWindow::openFile()
         fileView_doubleClicked(contextMenuIndex);
 }
 
-// Run in Administrator
+// 以管理员模式运行
 void MainWindow::administratorOpen()
 {
     if (!contextMenuView || !contextMenuIndex.isValid()) return;
@@ -2146,10 +2151,10 @@ void MainWindow::administratorOpen()
         fileView_doubleClicked(contextMenuIndex);
 }
 
-// Open with
+// 打开方式
 void MainWindow::openWith(const QString& application)
 {
-    // If there is a state like "cut", clean it up first
+    // 如果有“cut”之类的状态，先清理一下
     clearCutStateIfNeeded();
 
     QString path = fileModel->filePath(contextMenuIndex);
@@ -2166,9 +2171,9 @@ void MainWindow::openWith(const QString& application)
 
         QString selectedApp = QFileDialog::getOpenFileName(
             p,
-            "Select a program to open the file with",
+            "选择用来打开文件的程序",
             startDir,
-            "All files (*)"
+            "所有文件 (*)"
         );
 
         if (selectedApp.isEmpty()) return;
@@ -2176,12 +2181,12 @@ void MainWindow::openWith(const QString& application)
     }
     else appToRun = application;
 
-    // Start with QProcess and pass in the current file path
+    // 使用 QProcess 启动并传入当前文件路径
     QProcess::startDetached(appToRun, QStringList() << path);
 }
 
-// Compress
-// If has 7z environment locally, use 7z to complete all the compression
+// 压缩
+// 如果本地有7z环境，则使用7z完成全部压缩
 QString MainWindow::find7z()
 {
     QStringList envPaths = qEnvironmentVariable("PATH").split(';', QString::SkipEmptyParts);
@@ -2204,11 +2209,11 @@ void MainWindow::renameCompressions(const QString &path)
                  : this;
 
     QInputDialog dlg(p);
-    dlg.setWindowTitle("Reanme");
-    dlg.setLabelText("Enter New Name：");
+    dlg.setWindowTitle("重命名");
+    dlg.setLabelText("输入新名称：");
     dlg.setTextValue(fi.fileName());
-    dlg.setOkButtonText("OK");
-    dlg.setCancelButtonText("Cancel");
+    dlg.setOkButtonText("确定");
+    dlg.setCancelButtonText("取消");
 
     dlg.resize(400, 300);
     font.setFamilies(QStringList() << "Microsoft YaHei" << "Malgun Gothic" << "Segoe UI");
@@ -2242,14 +2247,14 @@ void MainWindow::Compressions(const QString &format)
 
     if (!contextMenuIndex.isValid())
     {
-        QMessageBox::warning(p, "Error", "Please select a file or folder before compressing.");
+        QMessageBox::warning(p, "错误", "压缩前请选择文件或文件夹。");
         return;
     }
 
     QString srcPath = fileModel->filePath(contextMenuIndex);
     if (srcPath.isEmpty())
     {
-        QMessageBox::warning(p, "Error", "Unable to get the path of the selected item.");
+        QMessageBox::warning(p, "错误", "无法获取所选项目的路径。");
         return;
     }
 
@@ -2265,7 +2270,7 @@ void MainWindow::Compressions(const QString &format)
     {
         if (sevenZipPath.isEmpty())
         {
-            QMessageBox::warning(p, "Missing environment", "7z environment not detected.");
+            QMessageBox::warning(p, "环境缺失", "未检测到7z环境。");
             return;
         }
         program = sevenZipPath;
@@ -2315,7 +2320,7 @@ void MainWindow::Compressions(const QString &format)
     }
     else
     {
-        QMessageBox::warning(p, "Unsupported format", QString("Unsupported format : %1").arg(format));
+        QMessageBox::warning(p, "不支持的格式", QString("不支持的格式 : %1").arg(format));
         return;
     }
 
@@ -2327,8 +2332,8 @@ void MainWindow::Compressions(const QString &format)
     }
 
     m_progressDialog = new QProgressDialog(
-        QString("Compressing %1 …").arg(QFileInfo(dstPath).fileName()),
-        "Cancel", 0, 100, p);
+        QString("压缩中 %1 …").arg(QFileInfo(dstPath).fileName()),
+        "取消", 0, 100, p);
 
     m_progressDialog->setWindowFlags(Qt::Window | Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
     m_progressDialog->setWindowModality(Qt::NonModal);
@@ -2349,7 +2354,7 @@ void MainWindow::Compressions(const QString &format)
     }
     m_compressProc = new QProcess(p);
 
-    // 7z/zip/tar branch, using 7z
+    // 7z/zip/tar 分支, 使用 7z
     if (!usePowerShell && !useTar)
     {
         auto updateProgress = [this](const QByteArray& output)
@@ -2374,7 +2379,7 @@ void MainWindow::Compressions(const QString &format)
         });
     }
 
-    // PowerShell and system tar branching with pseudo-progress
+    // PowerShell 和系统 tar 分支与伪进度
     if (usePowerShell || useTar)
     {
         if (m_fakeProgressTimer)
@@ -2396,10 +2401,10 @@ void MainWindow::Compressions(const QString &format)
             else
                 m_fakeProgressTimer->stop();
         });
-        m_fakeProgressTimer->start(50);    // The progress bar will be full in about 5 seconds
+        m_fakeProgressTimer->start(50);    // 大约5秒后进度条会满
     }
 
-    // End processing
+    // 结束处理
     connect(m_compressProc,
         QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
         this, [=](int exitCode, QProcess::ExitStatus status) {
@@ -2415,11 +2420,11 @@ void MainWindow::Compressions(const QString &format)
 
             if (exitCode == 0)
             {
-                QMessageBox::information(p, "Finished", QString("Compressed file : \n%1").arg(dstPath));
+                QMessageBox::information(p, "已完成", QString("压缩文件 : \n%1").arg(dstPath));
                 renameCompressions(dstPath);
             }
             else
-                QMessageBox::warning(p, "Failed", QString("Compression failed (Exit Code %1)").arg(exitCode));
+                QMessageBox::warning(p, "失败", QString("压缩失败 (退出吗 %1)").arg(exitCode));
 
             m_compressProc->deleteLater();
             m_compressProc = nullptr;
@@ -2429,7 +2434,7 @@ void MainWindow::Compressions(const QString &format)
     m_compressProc->start(program, args);
 }
 
-// Add to favorites
+// 加入收藏
 void MainWindow::saveFavoritesToFile()
 {
     QJsonObject root;
@@ -2456,19 +2461,19 @@ void MainWindow::deleteFileFromFavorites()
 {
     loadFavoritesFromFile();
 
-    // Get the path of the currently selected file/folder
+    // 1. 先获取当前选中的文件/文件夹路径
     QModelIndex index = leftView->currentIndex();
     if (!index.isValid()) return;
 
     QString path = fileModel->filePath(index);
 
-    // Pop up a dialog box to let the user select the collection category to be removed
-    QInputDialog inputDialog(fDialog);
-    inputDialog.setWindowTitle("Remove collection");
-    inputDialog.setLabelText("Please select the category to remove from : ");
+    // 2. 弹出对话框，让用户选择要移除的收藏类别
+    QInputDialog inputDialog(this);
+    inputDialog.setWindowTitle("移除收藏");
+    inputDialog.setLabelText("请选择要从哪个类别中移除 : ");
     inputDialog.setComboBoxItems(categories);
     inputDialog.setComboBoxEditable(false);
-    // Use the same font settings
+    // 使用同样的字体设置
     inputDialog.setFont(font);
     inputDialog.resize(400, 300);
 
@@ -2479,24 +2484,24 @@ void MainWindow::deleteFileFromFavorites()
     if (category.isEmpty())
         return;
 
-    // Remove from favorites and save to file
-    // removeAll will return the number of elements removed
+    // 3. 从 favorites 中删除，并保存到文件
+    // removeAll 会返回删除的元素个数
     int removed = favorites[category].removeAll(path);
     if (removed > 0)
     {
         saveFavoritesToFile();
         QMessageBox::information(
-            fDialog,
-            "Remove collection",
-            QString("Successfully removed path \"%1\" from the “%2” collection.").arg(path, category)
+            this,
+            "移除收藏",
+            QString("已成功将路径 \"%1\" 从“%2”收藏中移除。").arg(path, category)
         );
     }
     else
     {
         QMessageBox::information(
-            fDialog,
-            "Remove collection",
-            QString("Path \"%1\" is not in “%2” collection.").arg(path, category)
+            this,
+            "移除收藏",
+            QString("路径 \"%1\" 不在“%2”收藏中。").arg(path, category)
         );
     }
 }
@@ -2543,17 +2548,17 @@ void MainWindow::collect(const QString& category, const QString& path)
     {
         favorites[category].append(path);
         saveFavoritesToFile();
-        QMessageBox::information(p, "Add to favorites", QString("Successfully added path \"%1\" to the “%2” collection.").arg(path, category));
+        QMessageBox::information(p, "加入收藏", QString("成功将路径 \"%1\" 加入到“%2”收藏中。").arg(path, category));
     }
     else
-        QMessageBox::information(p, "Add to favorites", QString("Path \"%1\" already exists in “%2” collection.").arg(path, category));
+        QMessageBox::information(p, "加入收藏", QString("路径 \"%1\" 已经存在于“%2”收藏中。").arg(path, category));
 }
 
 void MainWindow::addToFavorites()
 {
     loadFavoritesFromFile();
 
-    // Get all selected items (only take column==0 to prevent duplication)
+    // 获取所有选定的项目 (仅取column==0以防止重复)
     QModelIndexList selected = contextMenuView->selectionModel()->selectedIndexes();
     QSet<QString> uniquePaths;
     for (const QModelIndex& idx : selected)
@@ -2563,18 +2568,18 @@ void MainWindow::addToFavorites()
     }
     if (uniquePaths.isEmpty()) return;
 
-    // A dialog box pops up to select a favorite category
+    // 弹出对话框选择喜欢的类别
     QWidget* p = (contextMenuView == fileView && favoritesDialogPtr)
                  ? static_cast<QWidget*>(favoritesDialogPtr)
                  : this;
 
     QInputDialog inputDialog(p);
-    inputDialog.setWindowTitle("Add to favorites");
-    inputDialog.setLabelText("Please select collection category : ");
+    inputDialog.setWindowTitle("加入收藏夹");
+    inputDialog.setLabelText("请选择收藏夹类别 : ");
     inputDialog.setComboBoxItems(categories);
     inputDialog.setComboBoxEditable(false);
 
-    // Set a larger font
+    // 设置更大的字体
     font.setFamilies(QStringList() << "Microsoft YaHei" << "Malgun Gothic" << "Segoe UI");
     font.setPointSize(11);
     inputDialog.setFont(font);
@@ -2592,7 +2597,7 @@ void MainWindow::addToFavorites()
     {
         QString category = inputDialog.textValue();
         if (category.isEmpty()) return;
-        // Add all selected files/folders in batches
+        // 批量添加所有选定的文件/文件夹
         for (const QString& path : uniquePaths)
         {
             collect(category, path);
@@ -2600,55 +2605,55 @@ void MainWindow::addToFavorites()
     }
 }
 
-// Create new
+// 新建
 void MainWindow::createNew(const QString& type)
 {
-    // Get the current directory
+    // —— 1. 取当前目录 ——
     QModelIndex currIdx = contextMenuView->rootIndex();
     QString dirPath = fileModel->filePath(currIdx);
     if (dirPath.isEmpty() || !QDir(dirPath).exists()) return;
 
-    // Determine the suffix, default name, and whether to use COM based on the type
+    // —— 2. 根据 type 决定后缀、默认名，以及是否用 COM ——
     QString suffix, defaultName;
     bool useCom = false;
 
-    if      (type == "directory") { defaultName = "New folder"; }
-    else if (type == "image")     { suffix = ".png";  defaultName = "New image"; }
-    else if (type == "txt")       { suffix = ".txt";  defaultName = "New text document"; }
-    else if (type == "docx")      { suffix = ".docx"; defaultName = "New Word document"; useCom = true; }
-    else if (type == "pdf")       { suffix = ".pdf";  defaultName = "New PDF document"; }
-    else if (type == "pptx")      { suffix = ".pptx"; defaultName = "New PPT document"; useCom = true; }
-    else if (type == "xlsx")      { suffix = ".xlsx"; defaultName = "New Excel table"; useCom = true; }
+    if      (type == "directory") { defaultName = tr("新建文件夹"); }
+    else if (type == "image")     { suffix = ".png";  defaultName = tr("新建图像"); }
+    else if (type == "txt")       { suffix = ".txt";  defaultName = tr("新建文本文档"); }
+    else if (type == "docx")      { suffix = ".docx"; defaultName = tr("新建Word文档");  useCom = true; }
+    else if (type == "pdf")       { suffix = ".pdf";  defaultName = tr("新建PDF文档"); }
+    else if (type == "pptx")      { suffix = ".pptx"; defaultName = tr("新建PPT文稿");  useCom = true; }
+    else if (type == "xlsx")      { suffix = ".xlsx"; defaultName = tr("新建Excel表格");useCom = true; }
     else                          { return; }
 
-    // Pop up input box to get the user's file
+    // —— 3. 弹输入框获取用户文件名 ——
     QWidget* p = (contextMenuView == fileView && favoritesDialogPtr)
                  ? static_cast<QWidget*>(favoritesDialogPtr)
                  : this;
 
     QInputDialog dlg(p);
-    dlg.setWindowTitle("New");
-    dlg.setLabelText("Enter name : ");
+    dlg.setWindowTitle("新建");
+    dlg.setLabelText("输入名称 : ");
     dlg.setTextValue(defaultName);
     dlg.setOption(QInputDialog::NoButtons, false);
-    dlg.setOkButtonText("OK");
-    dlg.setCancelButtonText("Cancel");
+    dlg.setOkButtonText("确定");
+    dlg.setCancelButtonText("取消");
 
     dlg.setFixedSize(400, 300);
     font.setFamilies(QStringList() << "Microsoft YaHei" << "Malgun Gothic" << "Segoe UI");
     font.setPointSize(10);
     dlg.setFont(font);
 
-    // Pop up dialog box
+    // 弹出对话框
     if (dlg.exec() != QDialog::Accepted) return;
 
-    // Get input and remove leading and trailing whitespace
+    // 得到输入并去除前后空白
     QString userInput = dlg.textValue().trimmed();
     if (userInput.isEmpty()) return;
 
-    // Remove unnecessary suffixes and prepare finalName/fullPath
+    // —— 4. 去除多余后缀、准备 finalName/fullPath ——
     QFileInfo inputInfo(userInput);
-    QString baseName  = inputInfo.completeBaseName();    // Support multiple extensions
+    QString baseName  = inputInfo.completeBaseName();    // 支持多种扩展
     QString finalName = (type == "directory")
                         ? baseName
                         : baseName + suffix;
@@ -2656,9 +2661,8 @@ void MainWindow::createNew(const QString& type)
     QString fullPath;
     int counter = 1;
 
-    // Guaranteed no duplication of names
-    do
-    {
+    // 保证不重名
+    do {
         fullPath = QDir(dirPath).filePath(finalName);
         if (!QFileInfo::exists(fullPath)) break;
         finalName = QString("%1(%2)%3")
@@ -2667,13 +2671,13 @@ void MainWindow::createNew(const QString& type)
                         .arg(suffix);
     } while (true);
 
-    // Unified asynchronous creation for all types
+    // —— 5. 所有类型的统一异步创建 ——
     auto createFunc = [=]() -> bool {
-        // Directory: Synchronous creation
+        // 目录：同步创建
         if (type == "directory")
             return QDir(dirPath).mkdir(finalName);
 
-        // Ordinary files: Synchronous creation
+        // 普通文件：同步创建
         else if (!useCom)
         {
             if (type == "pdf")
@@ -2699,7 +2703,7 @@ void MainWindow::createNew(const QString& type)
             }
         }
 
-        // Office files: Create asynchronously to avoid blocking
+        // Office 文件：异步创建以避免阻塞
         if (useCom)
         {
 #ifdef Q_OS_WIN
@@ -2757,25 +2761,25 @@ void MainWindow::createNew(const QString& type)
         watcher->deleteLater();
         if (!ok)
         {
-            QMessageBox::warning(p, "Error", QString("Unable to create : \n%1").arg(fullPath));
+            QMessageBox::warning(p, "错误", QString("无法创建 : \n%1").arg(fullPath));
         }
         else
         {
-            qDebug() << "Create Successfully : " << fullPath;
+            qDebug() << "创建成功 : " << fullPath;
             //refreshView();
         }
     });
     watcher->setFuture(QtConcurrent::run(createFunc));
 }
 
-// Create new folder
+// 新建文件夹
 void MainWindow::createDirectory()
 {
     QString type = "directory";
     createNew(type);
 }
 
-// Copy file path
+// 复制文件路径
 void MainWindow::copyFilePath()
 {
     //QModelIndex idx = leftView->currentIndex();
@@ -2787,10 +2791,10 @@ void MainWindow::copyFilePath()
                  ? static_cast<QWidget*>(favoritesDialogPtr)
                  : this;
 
-    QToolTip::showText(QCursor::pos(), "Copied file path", p);
+    QToolTip::showText(QCursor::pos(), "文件路径已复制", p);
 }
 
-// Create shortcuts across platforms
+// 跨平台快捷方式
 // Windows
 #ifdef Q_OS_WIN
 bool MainWindow::createWindowsShortcut(const QString& targetPath, const QString& linkPath)
@@ -2860,7 +2864,7 @@ bool MainWindow::createMacAlias(const QString& targetPath, const QString& linkPa
 }
 #endif
 
-// Create shortcut
+// 创建快捷方式
 void MainWindow::createShortCut()
 {
     QWidget* p = (contextMenuView == fileView && favoritesDialogPtr)
@@ -2870,7 +2874,7 @@ void MainWindow::createShortCut()
     clearCutStateIfNeeded();
     if (!contextMenuIndex.isValid())
     {
-        QMessageBox::warning(p, "Failed", "No files or folders selected");
+        QMessageBox::warning(p, "失败", "没有选择文件或文件夹");
         return;
     }
 
@@ -2883,64 +2887,64 @@ void MainWindow::createShortCut()
 #ifdef Q_OS_WIN
     linkPath = QDir(dir).filePath(name + ".lnk");
     if (!createWindowsShortcut(targetPath, linkPath))
-        QMessageBox::warning(p, "Failed", "Unable to create shortcut");
+        QMessageBox::warning(p, "失败", "无法创建快捷方式");
 #elif defined(Q_OS_LINUX)
     linkPath = QDir(dir).filePath(name + ".desktop");
     if (!createLinuxDesktopFile(targetPath, linkPath))
-        QMessageBox::warning(p, "Failed", "Unable to create desktop shortcut");
+        QMessageBox::warning(p, "失败", "无法创建desktop快捷方式");
 #elif defined(Q_OS_MAC)
     linkPath = QDir(dir).filePath(name + ".alias");
     if (!createMacAlias(targetPath, linkPath))
-        QMessageBox::warning(p, "Failed", "Unable to create alias");
+        QMessageBox::warning(p, "失败", "无法创建别名");
 #endif
 
-    // Refresh view
+    // 刷新视图
     updateRightView();
 }
 
-// Cut
+// 剪切
 bool MainWindow::isFileAvailableForCut(const QString& path, QString& errorDetail)
 {
     QFileInfo fi(path);
     if (!fi.exists())
     {
-        errorDetail = "File does not exist";
+        errorDetail = "文件不存在";
         return false;
     }
     if (!fi.isWritable())
     {
-        errorDetail = "No write permission";
+        errorDetail = "没有写入权限";
         return false;
     }
     if (fi.isFile())
     {
         QFile file(path);
-        // First determine whether it can be opened in write mode
+        // 首先判断是否可以以写模式打开
         if (!file.open(QIODevice::ReadWrite))
         {
-            // Determine whether it is a permission issue or is occupied
-            // Try opening it read-only first
+            // 判断是权限问题还是被占用
+            // 尝试先以只读方式打开
             if (file.open(QIODevice::ReadOnly))
             {
-                errorDetail = "The file is occupied by another program";
+                errorDetail = "该文件已被另一个程序占用";
                 file.close();
             }
             else
-                errorDetail = "The file is occupied or has no permission (the specific reason is unknown)";
+                errorDetail = "文件被占用或者没有权限 (具体原因未知)";
             return false;
         }
         file.close();
     }
     if (fi.isSymLink() && !QFileInfo(fi.symLinkTarget()).exists())
     {
-        errorDetail = "Symbolic link target unreachable";
+        errorDetail = "符号链接目标无法访问";
         return false;
     }
-    // Check for network/hardware issues (such as unreachable paths, unavailable drive letters)
+    // 检查网络/硬件问题 (例如无法访问的路径、不可用的驱动器号)
 #ifdef Q_OS_WIN
     if (fi.absoluteFilePath().startsWith("\\\\") && !fi.isReadable())
     {
-        errorDetail = "The network path is not accessible";
+        errorDetail = "网络路径无法访问";
         return false;
     }
 #endif
@@ -2967,10 +2971,10 @@ void MainWindow::cut()
         QString path = fileModel->filePath(idx);
         QString detail;
 
-        // Determines whether the favorites file view is opening the folder
+        // 确定收藏夹文件视图是否正在打开文件夹
         if (favoritesDialogPtr && fileView->isVisible() && QFileInfo(path).isDir() && mainPath == path)
         {
-            QMessageBox::warning(p, "Unabel to cut", "The folder is being used by Favorites and cannot be cut.");
+            QMessageBox::warning(p, "无法剪切", "该文件夹正在被收藏夹使用，无法剪切。");
             return;
         }
 
@@ -2987,18 +2991,18 @@ void MainWindow::cut()
         for (int i = 0; i < errorFiles.size(); ++i)
         {
             QFileInfo fi(errorFiles[i]);
-            msg += QString("\nName : %1\n\nType : %2\n\nModified time : %3\n\nPath : %4\n\nError : %5\n")
+            msg += QString("\n名称 : %1\n\n类型 : %2\n\n修改时间 : %3\n\n路径 : %4\n\n错误 : %5\n")
                 .arg(fi.fileName())
-                .arg(fi.isDir() ? "Folder" : "File")
+                .arg(fi.isDir() ? "文件夹" : "文件")
                 .arg(fi.lastModified().toString("yyyy-MM-dd hh:mm:ss"))
                 .arg(fi.absoluteFilePath())
                 .arg(errorDetails[i]);
         }
-        QMessageBox::warning(p, "Unable to cut", msg);
+        QMessageBox::warning(p, "无法剪切", msg);
         return;
     }
 
-    // All can be cut, execute cutting
+    // 全部可以剪切
     clipPaths.clear();
     for (const QModelIndex& idx : files)
     {
@@ -3017,7 +3021,7 @@ void MainWindow::cut()
     rightClickMenu->isCopy = true;
 }
 
-// Copy
+// 复制
 void MainWindow::copy()
 {
     QModelIndexList selected = contextMenuView->selectionModel()->selectedIndexes();
@@ -3038,7 +3042,7 @@ void MainWindow::copy()
     rightClickMenu->isCopy = true;
 }
 
-// Paste
+// 粘贴
 void FileCopyTask::doCopy()
 {
     qint64 copied = 0;
@@ -3062,19 +3066,19 @@ void FileCopyTask::doCopy()
                 emit currentFile(sfi.fileName());
                 if (sfi.isDir())
                 {
-                    // Only ensure that the directory exists, do not delete it as a whole
+                    // 只保证目录存在，不要整体删除
                     QDir().mkpath(dstFile);
                 }
                 else
                 {
-                    // Overwrite only if the target file exists and the source and target file paths are different
+                    // 仅当目标文件存在且源文件和目标文件路径不同时才覆盖
                     if (QFileInfo::exists(dstFile) && srcFile != dstFile && m_toOverwriteFiles.contains(dstFile))
                         QFile::remove(dstFile);
                     QFile srcF(srcFile);
                     QFile dstF(dstFile);
                     if (!srcF.open(QIODevice::ReadOnly) || !dstF.open(QIODevice::WriteOnly))
                     {
-                        emit finished(false, QString("Unable to open file : %1").arg(srcFile));
+                        emit finished(false, QString("无法打开文件 : %1").arg(srcFile));
                         return;
                     }
                     const qint64 blockSize = 16 * 1024 * 1024;
@@ -3093,14 +3097,14 @@ void FileCopyTask::doCopy()
         }
         else
         {
-            // Overwrite only if the target file exists and the source and target file paths are different
+            // 仅当目标文件存在且源文件和目标文件路径不同时才覆盖
             if (QFileInfo::exists(m_dsts[i]) && m_srcs[i] != m_dsts[i] && m_toOverwriteFiles.contains(m_dsts[i]))
                 QFile::remove(m_dsts[i]);
             QFile srcF(m_srcs[i]);
             QFile dstF(m_dsts[i]);
             if (!srcF.open(QIODevice::ReadOnly) || !dstF.open(QIODevice::WriteOnly))
             {
-                emit finished(false, QString("Unable to open file : %1").arg(m_srcs[i]));
+                emit finished(false, QString("无法打开文件 : %1").arg(m_srcs[i]));
                 return;
             }
             const qint64 blockSize = 16 * 1024 * 1024;
@@ -3128,7 +3132,7 @@ void MainWindow::paste(const QString& dir)
                  ? static_cast<QWidget*>(favoritesDialogPtr)
                  : this;
 
-    // Target Directory
+    // 目标目录
     QString dstDir = dir;
     QModelIndexList selected = contextMenuView->selectionModel()->selectedIndexes();
     if (!selected.isEmpty())
@@ -3174,12 +3178,12 @@ void MainWindow::paste(const QString& dir)
         else totalSize += fi.size();
     }
 
-    // Whether to cover
+    // 是否覆盖
     if (!fileConflicts.isEmpty())
     {
         QString info = fileConflicts.join("\n");
-        auto btn = QMessageBox::question(p, "File overwrite confirmation",
-            tr("There is file with same name : \n%1\n overwrite? ").arg(info),
+        auto btn = QMessageBox::question(p, "文件覆盖确认",
+            tr("有同名文件 : \n%1\n 是否覆盖? ").arg(info),
             QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
         if (btn != QMessageBox::Yes)
             return;
@@ -3187,8 +3191,8 @@ void MainWindow::paste(const QString& dir)
     if (!dirConflicts.isEmpty())
     {
         QString info = dirConflicts.join("\n");
-        auto btn = QMessageBox::question(p, "Folder overwrite confirmation",
-            tr("There is folder with same name : \n%1\n overwrite？").arg(info),
+        auto btn = QMessageBox::question(p, "文件夹覆盖确认",
+            tr("有同名文件夹 : \n%1\n 是否覆盖? ").arg(info),
             QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
         if (btn != QMessageBox::Yes)
             return;
@@ -3203,7 +3207,7 @@ void MainWindow::paste(const QString& dir)
         }
     }
 
-    // Start asynchronous replication, passing the files and folders that need to be overwritten
+    // 启动异步复制，传递需要覆盖的文件和文件夹
     QThread* thread = new QThread;
     FileCopyTask* worker = new FileCopyTask(srcs, dsts, totalSize, toOverwriteFiles, toOverwriteDirs);
     worker->moveToThread(thread);
@@ -3215,15 +3219,15 @@ void MainWindow::paste(const QString& dir)
     if (totalSize > 4.7 * 1024 * 1024 * 1024)
     {
         dialog = new QDialog(p);
-        dialog->setWindowTitle("Pasting...");
+        dialog->setWindowTitle("粘贴中...");
         dialog->setWindowFlags(Qt::Window | Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
         dialog->setWindowModality(Qt::NonModal);
         dialog->setFixedSize(400, 300);
 
         QVBoxLayout* layout = new QVBoxLayout(dialog);
-        label = new QLabel("Pasting, please wait...");
-        label->setWordWrap(true);    // Allow line breaks
-        label->setAlignment(Qt::AlignCenter); // Center Align
+        label = new QLabel("正在粘贴, 请稍候...");
+        label->setWordWrap(true);    // 允许换行
+        label->setAlignment(Qt::AlignCenter);    // 居中对齐
         progressBar = new QProgressBar(dialog);
         progressBar->setRange(0, 100);
         layout->addWidget(label);
@@ -3237,12 +3241,12 @@ void MainWindow::paste(const QString& dir)
             //dialog->adjustSize();
         });
         connect(worker, &FileCopyTask::currentFile, this, [=](const QString& filename) {
-            // Truncate long file names
+            // 截断过长的文件名
             QString displayName = filename;
             if (displayName.length() > 70)
                 displayName = displayName.left(40) + "..." + displayName.right(10);
 
-            label->setText(QString("Pasting %1, please wait...").arg(filename));
+            label->setText(QString("正在粘贴 %1, 请稍候...").arg(filename));
             /*dialog->setFixedHeight(170);
             dialog->adjustSize();
             if (dialog->width() > 800)
@@ -3252,13 +3256,13 @@ void MainWindow::paste(const QString& dir)
     else if (totalSize > 1 * 1024 * 1024 * 1024)
     {
         dialog = new QDialog(p);
-        dialog->setWindowTitle("Pasting...");
+        dialog->setWindowTitle("粘贴中...");
         dialog->setWindowFlags(Qt::Window | Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
         dialog->setWindowModality(Qt::NonModal);
         dialog->setFixedSize(400, 300);
 
         QVBoxLayout* layout = new QVBoxLayout(dialog);
-        label = new QLabel("Pasting, please wait...");
+        label = new QLabel("正在粘贴, 请稍候...");
         label->setWordWrap(true);
         label->setAlignment(Qt::AlignCenter);
         layout->addWidget(label);
@@ -3270,14 +3274,14 @@ void MainWindow::paste(const QString& dir)
             if (displayName.length() > 70)
                 displayName = displayName.left(40) + "..." + displayName.right(10);
 
-            label->setText(QString("Pasting %1, please wait...").arg(filename));
+            label->setText(QString("正在粘贴 %1, 请稍候...").arg(filename));
         });
     }
 
     connect(thread, &QThread::started, worker, &FileCopyTask::doCopy);
     connect(worker, &FileCopyTask::finished, this, [=](bool success, const QString &err) {
         if (dialog) dialog->close();
-        if (!success) QMessageBox::warning(this, "Paste failed : ", err);
+        if (!success) QMessageBox::warning(this, "粘贴失败 : ", err);
         else
         {
             if (clipIsCut)
@@ -3307,7 +3311,7 @@ void MainWindow::paste(const QString& dir)
     {
         connect(thread, &QThread::started, worker, &FileCopyTask::doCopy);
         connect(worker, &FileCopyTask::finished, this, [=](bool success, const QString &err) {
-            if (!success) QMessageBox::warning(this, "Paste failed : ", err);
+            if (!success) QMessageBox::warning(this, "粘贴失败 : ", err);
             else
             {
                 if (clipIsCut)
@@ -3333,12 +3337,12 @@ void MainWindow::paste(const QString& dir)
         thread->start();
     }
 
-    // Clear traces after pasting
+    // 粘贴后清理痕迹
     clipPaths.clear();
     rightClickMenu->isCopy = false;
 }
 
-// Delete
+// 删除
 void MainWindow::fileDeleteError(const QString& path, const QString& errorMsg, QFileInfo info)
 {
     QWidget* p = (contextMenuView == fileView && favoritesDialogPtr)
@@ -3346,26 +3350,26 @@ void MainWindow::fileDeleteError(const QString& path, const QString& errorMsg, Q
                  : this;
 
     // Construction details
-    QString details = QString("Name : %1\nSuffix : %2\nMomodified time : %3\nPath : %4")
+    QString details = QString("名称 : %1\n后缀 : %2\n修改时间 : %3\n路径 : %4")
         .arg(info.fileName())
         .arg(info.suffix())
         .arg(info.lastModified().toString("yyyy-MM-dd hh:mm:ss"))
         .arg(info.absoluteFilePath());
 
     QDialog dlg(p);
-    dlg.setWindowTitle("Deletion failed");
+    dlg.setWindowTitle("删除失败");
     QVBoxLayout* layout = new QVBoxLayout(&dlg);
 
     QLabel* label = new QLabel(QString("%1\n\n%2").arg(errorMsg, details));
     layout->addWidget(label);
 
-    QCheckBox* applyAllBox = new QCheckBox("Automatically perform this operation on subsequent files of the same type");
+    QCheckBox* applyAllBox = new QCheckBox("自动对后续同类型的文件执行此操作");
     layout->addWidget(applyAllBox);
 
     QHBoxLayout* btnLayout = new QHBoxLayout;
-    QPushButton* retryBtn = new QPushButton("Retry");
-    QPushButton* skipBtn = new QPushButton("Skip");
-    QPushButton* cancelBtn = new QPushButton("Cancel");
+    QPushButton* retryBtn = new QPushButton("重试");
+    QPushButton* skipBtn = new QPushButton("跳过");
+    QPushButton* cancelBtn = new QPushButton("取消");
     btnLayout->addWidget(retryBtn);
     btnLayout->addWidget(skipBtn);
     btnLayout->addWidget(cancelBtn);
@@ -3378,7 +3382,7 @@ void MainWindow::fileDeleteError(const QString& path, const QString& errorMsg, Q
 
     dlg.exec();
 
-    // Signals return of user selection
+    // 发出用户选择返回信号
     emit fileDeleteTask->userDeleteChoice(userAction, applyAllBox->isChecked());
 }
 
@@ -3397,7 +3401,7 @@ bool MainWindow::deleteWithWindowsDialog(const QStringList& paths)
     fileOp.wFunc = FO_DELETE;
     fileOp.pFrom = from.data();
     fileOp.pTo = nullptr;
-    // Without FOF_ALLOWUNDO, completely delete, pop up native conflict/error dialog
+    // 不带FOF_ALLOWUNDO，彻底删除，弹出原生冲突/错误对话框
     fileOp.fFlags = 0;
     int res = SHFileOperationW(&fileOp);
     return (res == 0 && !fileOp.fAnyOperationsAborted);
@@ -3439,7 +3443,7 @@ void FileDeleteTask::doDelete(bool toRecycleBin)
         emit currentFile(fi.fileName());
 
         bool ok = false;
-        int userAction = 0;    // 0=retry, 1=skip, 2=cancel
+        int userAction = 0;    // 0=重试, 1=跳过, 2=取消
         static bool applyToAll = false;
         static int lastAction = 0;
 
@@ -3466,20 +3470,20 @@ void FileDeleteTask::doDelete(bool toRecycleBin)
                     ok = QFile::remove(p);
             }
 
-            // Success, continue to the next file
+            // 成功，继续下一个文件
             if (ok) break;
 
-            // Failure, handling conflict
+            // 失败，处理冲突
             if (applyToAll)
                 userAction = lastAction;
             else
             {
-                // Send a signal to the main thread to pop up a dialog box
-                // Block waiting for the user to select
+                // 向主线程发送信号以弹出对话框
+                // 阻塞等待用户选择
                 QEventLoop loop;
                 int result = 0;
                 bool applyAll = false;
-                emit fileDeleteError(p, "Failed to delete file/folder", fi);
+                emit fileDeleteError(p, "删除文件/文件夹失败", fi);
 
                 connect(this, &FileDeleteTask::userDeleteChoice, &loop, [&](int action, bool applyToAllFlag) {
                     result = action;
@@ -3496,7 +3500,7 @@ void FileDeleteTask::doDelete(bool toRecycleBin)
                 }
             }
 
-            // 0 = retry, 1 = skip, 2 = cancel
+            // 0 = 重试, 1 = 跳过, 2 = 取消
             if (userAction == 0) continue;
             if (userAction == 1) break;
             if (userAction == 2)
@@ -3509,12 +3513,12 @@ void FileDeleteTask::doDelete(bool toRecycleBin)
 
         if (cancelAll) break;
 
-        // Progress Statistics
+        // 进度统计信息
         if (ok && fi.isFile()) deleted += fi.size();
         emit progress(deleted, m_total);
         QCoreApplication::processEvents();
     }
-    emit finished(allOk, allOk ? QString() : QString("Failed to delete some files/folders"));
+    emit finished(allOk, allOk ? QString() : QString("删除一些文件/文件夹失败"));
 }
 
 void MainWindow::toRecyleBin()
@@ -3552,7 +3556,7 @@ void MainWindow::toRecyleBin()
             totalSize += fi.size();
     }
 
-    // Files smaller than 1GB will be deleted synchronously
+    // 小于1GB的文件将被同步删除
     if (totalSize <= 1 * 1024 * 1024 * 1024)
     {
         bool allOk = true;
@@ -3567,13 +3571,13 @@ void MainWindow::toRecyleBin()
 #endif
         }
         if (!allOk)
-            QMessageBox::warning(p, tr("Operation failed"), tr("Some options cannot be moved to the Trash"));
+            QMessageBox::warning(p, tr("操作失败"), tr("有些选项无法移至回收站"));
         //else
             //updateRightView();
         return;
     }
 
-    // Asynchronous deletion of files larger than 1GB
+    // 异步删除大于1GB的文件
     QThread* thread = new QThread;
     FileDeleteTask* worker = new FileDeleteTask(paths, totalSize);
     worker->moveToThread(thread);
@@ -3587,15 +3591,15 @@ void MainWindow::toRecyleBin()
     if (totalSize > 4.7 * 1024 * 1024 * 1024)
     {
         dialog = new QDialog(p);
-        dialog->setWindowTitle("Moving to Trash...");
+        dialog->setWindowTitle("正在移至回收站...");
         dialog->setWindowFlags(Qt::Window | Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
         dialog->setWindowModality(Qt::NonModal);
         dialog->setFixedSize(400, 300);
 
         QVBoxLayout* layout = new QVBoxLayout(dialog);
-        label = new QLabel("Moving to Trash...");
-        label->setWordWrap(true);    // Allow line breaks
-        label->setAlignment(Qt::AlignCenter);    // Center Align
+        label = new QLabel("正在移至回收站...");
+        label->setWordWrap(true);    // 允许自动换行
+        label->setAlignment(Qt::AlignCenter);    // 居中对齐
         progressBar = new QProgressBar(dialog);
         progressBar->setRange(0, 100);
         layout->addWidget(label);
@@ -3612,13 +3616,13 @@ void MainWindow::toRecyleBin()
     else
     {
         dialog = new QDialog(p);
-        dialog->setWindowTitle("Moving to Trash...");
+        dialog->setWindowTitle("正在移至回收站...");
         dialog->setWindowFlags(Qt::Window | Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
         dialog->setWindowModality(Qt::NonModal);
-        dialog->setFixedSize(400, 300);
+        dialog->resize(400, 90);
 
         QVBoxLayout* layout = new QVBoxLayout(dialog);
-        label = new QLabel("Moving to Trash...");
+        label = new QLabel("正在移至回收站...");
         label->setWordWrap(true);
         label->setAlignment(Qt::AlignCenter);
         layout->addWidget(label);
@@ -3626,14 +3630,14 @@ void MainWindow::toRecyleBin()
         dialog->show();
     }
 
-    // Display current file name in real time
+    // 实时显示当前文件名
     connect(worker, &FileDeleteTask::currentFile, this, [=](const QString& filename) {
-        // Truncate long file names
+        // 截断过长的文件名
         QString displayName = filename;
         if (displayName.length() > 70)
             displayName = displayName.left(40) + "..." + displayName.right(10);
 
-        label->setText(QString("Moving to Trash : %1").arg(filename));
+        label->setText(QString("正在移至回收站 : %1").arg(filename));
         /*dialog->setFixedHeight(170);
         dialog->adjustSize();
         if (dialog->width() > 800)
@@ -3643,7 +3647,7 @@ void MainWindow::toRecyleBin()
     connect(thread, &QThread::started, [=]() { worker->doDelete(true); });
     connect(worker, &FileDeleteTask::finished, this, [=](bool success, const QString &err) {
         if (dialog) dialog->close();
-        if (!success) QMessageBox::warning(p, "Operation failed", err);
+        if (!success) QMessageBox::warning(p, "操作失败", err);
         else updateRightView();
         thread->quit();
         thread->wait();
@@ -3661,26 +3665,26 @@ QString MainWindow::getDeleteErrorReason(const QString& path)
     {
         QString errStr = f.errorString();
 #ifdef Q_OS_WIN
-        if (errStr.contains("used by another process", Qt::CaseInsensitive) ||
-            errStr.contains("sharing violation", Qt::CaseInsensitive))
-            return "The file is occupied (a program is using it)";
+        if (errStr.contains("被另一个进程使用", Qt::CaseInsensitive) ||
+            errStr.contains("共享违规", Qt::CaseInsensitive))
+            return "该文件已被占用 (某个程序正在使用它)";
 #endif
-        if (errStr.contains("Permission denied", Qt::CaseInsensitive))
-            return "No permission";
-        if (errStr.contains("No such file or directory", Qt::CaseInsensitive))
-            return "File or folder does not exist";
+        if (errStr.contains("没有权限", Qt::CaseInsensitive))
+            return "没有权限";
+        if (errStr.contains("没有这样的文件或目录", Qt::CaseInsensitive))
+            return "文件或文件夹不存在";
 
         int err = errno;
         if (err == 32 || err == 33)
-            return "The file is occupied (a program is using it)";
+            return "该文件已被占用 (某个程序正在使用它)";
         else if (err == 13 || err == 5)
-            return "No permission";
+            return "没有权限";
         else if (err == 2)
-            return "File or folder does not exist";
+            return "文件或文件夹不存在";
         else if (!errStr.isEmpty())
-            return QString("Unable to delete, system error message : %1").arg(errStr);
+            return QString("无法删除，系统错误信息 : %1").arg(errStr);
         else
-            return QString("Unable to delete, system error code%1 : %2").arg(err).arg(strerror(err));
+            return QString("无法删除，系统错误代码%1 : %2").arg(err).arg(strerror(err));
     }
     f.close();
     return QString();
@@ -3710,11 +3714,11 @@ void MainWindow::del(const QStringList& paths, bool needConfirm, bool useSystemD
                  ? static_cast<QWidget*>(favoritesDialogPtr)
                  : this;
 
-    // Collect the paths of files/folders to be deleted uniformly
+    // 统一收集待删除文件/文件夹的路径
     QStringList filesToDelete;
     if (paths.isEmpty())
     {
-        // Delete Selected Items
+        // 删除选定项
         QModelIndexList selected = contextMenuView->selectionModel()->selectedIndexes();
         QSet<QString> uniquePaths;
         for (const QModelIndex& idx : selected)
@@ -3724,12 +3728,12 @@ void MainWindow::del(const QStringList& paths, bool needConfirm, bool useSystemD
                 QString path;
                 if (contextMenuView == fileView && fileView)
                 {
-                    // Favorites file view: Get the path based on the current model
+                    // 收藏夹文件视图: 根据当前 model 获取路径
                     path = fileModel->filePath(idx);
                 }
                 else if (contextMenuView == leftView || contextMenuView == rightView)
                 {
-                    // Main program view
+                    // 主程序视图
                     path = fileModel->filePath(idx);
                 }
 
@@ -3743,7 +3747,7 @@ void MainWindow::del(const QStringList& paths, bool needConfirm, bool useSystemD
         filesToDelete = paths;
     if (filesToDelete.isEmpty()) return;
 
-    // Statistics
+    // 统计信息
     QStringList names;
     qint64 totalSize = 0;
     for (const QString& p : filesToDelete)
@@ -3763,32 +3767,32 @@ void MainWindow::del(const QStringList& paths, bool needConfirm, bool useSystemD
             totalSize += fi.size();
     }
 
-    // Non-modal confirmation popup
+    // 非模态确认弹窗
     if (needConfirm)
     {
         QString info = names.join(", ");
         QMessageBox* box = new QMessageBox(QMessageBox::Question,
                                            "Delete",
-                                           QString("Confirm deletion of the following items : \n%1 ?").arg(info),
+                                           QString("确认删除 : \n%1 吗? ").arg(info),
                                            QMessageBox::Yes | QMessageBox::No,
                                            p);
         connect(box, &QMessageBox::finished, this, [=](int result){
             if (result == QMessageBox::Yes)
             {
-                // After the user confirms, execute asynchronous deletion
+                // 用户确认后，执行异步删除
                 this->startAsyncDelete(filesToDelete, totalSize);
             }
             box->deleteLater();
         });
         box->show();
-        return;
+        return; // 等待用户操作
     }
 
-    // If confirmation is not required, delete directly
+    // 不需要确认时，直接删除
     startAsyncDelete(filesToDelete, totalSize);
 }
 
-// Actual implementation of asynchronous deletion
+// 异步删除的实际实现
 void MainWindow::startAsyncDelete(const QStringList& filesToDelete, qint64 totalSize)
 {
     QWidget* p = (contextMenuView == fileView && favoritesDialogPtr)
@@ -3806,15 +3810,15 @@ void MainWindow::startAsyncDelete(const QStringList& filesToDelete, qint64 total
     if (totalSize > 4.7 * 1024 * 1024 * 1024)
     {
         dialog = new QDialog(p);
-        dialog->setWindowTitle("Deleting...");
+        dialog->setWindowTitle("删除中...");
         dialog->setWindowFlags(Qt::Window | Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
         dialog->setWindowModality(Qt::NonModal);
         dialog->setFixedSize(400, 300);
 
         QVBoxLayout* layout = new QVBoxLayout(dialog);
-        label = new QLabel("Deleting...");
-        label->setWordWrap(true);    // Allow word wrapping
-        label->setAlignment(Qt::AlignCenter);    // Center Align
+        label = new QLabel("正在删除...");
+        label->setWordWrap(true);    // 允许自动换行
+        label->setAlignment(Qt::AlignCenter);    // 居中对齐
         progressBar = new QProgressBar(dialog);
         progressBar->setRange(0, 100);
         layout->addWidget(label);
@@ -3831,13 +3835,13 @@ void MainWindow::startAsyncDelete(const QStringList& filesToDelete, qint64 total
     else
     {
         dialog = new QDialog(p);
-        dialog->setWindowTitle("Deleting...");
+        dialog->setWindowTitle("删除中..");
         dialog->setWindowFlags(Qt::Window | Qt::WindowMinimizeButtonHint | Qt::WindowCloseButtonHint);
         dialog->setWindowModality(Qt::NonModal);
         dialog->setFixedSize(400, 300);
 
         QVBoxLayout* layout = new QVBoxLayout(dialog);
-        label = new QLabel("Deleting...");
+        label = new QLabel("正在删除...");
         label->setWordWrap(true);
         label->setAlignment(Qt::AlignCenter);
         layout->addWidget(label);
@@ -3845,14 +3849,14 @@ void MainWindow::startAsyncDelete(const QStringList& filesToDelete, qint64 total
         dialog->show();
     }
 
-    // Display deleted file names in real time
+    // 实时显示已删除的文件名
     connect(worker, &FileDeleteTask::currentFile, this, [=](const QString& filename) {
-        // Truncate long file names
+        // 截断过长的文件名
         QString displayName = filename;
         if (displayName.length() > 70)
             displayName = displayName.left(40) + "..." + displayName.right(10);
 
-        label->setText(QString("Deleting : %1").arg(filename));
+        label->setText(QString("正在删除 : %1").arg(filename));
         /*dialog->setFixedHeight(170);
         dialog->adjustSize();
         if (dialog->width() > 800)
@@ -3862,7 +3866,7 @@ void MainWindow::startAsyncDelete(const QStringList& filesToDelete, qint64 total
     connect(thread, &QThread::started, [=]() { worker->doDelete(false); });
     connect(worker, &FileDeleteTask::finished, this, [=](bool success, const QString &err) {
         if (dialog) dialog->close();
-        if (!success) QMessageBox::warning(p, "Deletion failed", err);
+        if (!success) QMessageBox::warning(p, "删除失败", err);
         //else updateRightView();
 
         thread->quit();
@@ -3874,7 +3878,7 @@ void MainWindow::startAsyncDelete(const QStringList& filesToDelete, qint64 total
     thread->start();
 }
 
-// Rename
+// 重命名
 void MainWindow::rename()
 {
     clearCutStateIfNeeded();
@@ -3890,11 +3894,11 @@ void MainWindow::rename()
                  : this;
 
     QInputDialog dlg(p);
-    dlg.setWindowTitle("Rename");
-    dlg.setLabelText("Enter new name : ");
+    dlg.setWindowTitle("重命名");
+    dlg.setLabelText("输入新名称 : ");
     dlg.setTextValue(fi.fileName());
-    dlg.setOkButtonText("OK");
-    dlg.setCancelButtonText("Cancel");
+    dlg.setOkButtonText("确定");
+    dlg.setCancelButtonText("取消");
 
     dlg.resize(400, 300);
     font.setFamilies(QStringList() << "Microsoft YaHei" << "Malgun Gothic" << "Segoe UI");
@@ -3907,13 +3911,13 @@ void MainWindow::rename()
         if (!newName.isEmpty() && newName != fi.fileName())
         {
             QString newPath = fi.absolutePath() + QDir::separator() + newName;
-            if (!QFile::rename(oldPath, newPath)) QMessageBox::warning(this, "Rename failed", "Unable to rename");
+            if (!QFile::rename(oldPath, newPath)) QMessageBox::warning(this, "重命名失败", "无法重命名");
             //else updateRightView();
         }
     }
 }
 
-// Property
+// 属性
 void MainWindow::properties()
 {
     clearCutStateIfNeeded();
@@ -3944,15 +3948,15 @@ void MainWindow::properties()
         if (!result)
         {
             DWORD err = GetLastError();
-            qDebug() << "ShellExecuteExW failed with error : " << err;
+            qDebug() << "ShellExecuteExW 失败并出现错误 : " << err;
         }
         CoUninitialize();
     }
     else
-        qDebug() << "CoInitialize failed with HRESULT : " << hr;
+        qDebug() << "CoInitialize 失败并显示 HRESULT : " << hr;
 }
 
-// File preview
+// 文件预览
 void MainWindow::previewFile(const QModelIndex& index)
 {
     if (isPreview)
@@ -3960,12 +3964,12 @@ void MainWindow::previewFile(const QModelIndex& index)
         QString filePath = fileModel->filePath(index);
         QFileInfo fileInfo(filePath);
 
-        // If it is not a file, return directly
+        // 如果不是文件，直接返回
         if (!fileInfo.isFile()) return;
 
         QString suffix = fileInfo.suffix().toLower();
 
-        // If the preview type is not supported, return directly
+        // 如果不支持预览类型，则直接返回
         if (suffix != "txt" &&
             suffix != "png" && suffix != "jpg" &&
             suffix != "jpeg" && suffix != "bmp")
@@ -3973,7 +3977,7 @@ void MainWindow::previewFile(const QModelIndex& index)
             return;
         }
 
-        // If there is a preview box open, close it first
+        // 如果预览框已打开，请先将其关闭
         if (currentPreviewDialog)
         {
             currentPreviewDialog->close();
@@ -3981,23 +3985,23 @@ void MainWindow::previewFile(const QModelIndex& index)
             currentPreviewDialog = nullptr;
         }
 
-        // Create a new preview dialog
+        // 创建新的预览对话框
         currentPreviewDialog = new QDialog(this);
-        currentPreviewDialog->setAttribute(Qt::WA_DeleteOnClose);    // Automatically destroyed when closed
-        currentPreviewDialog->setWindowTitle("Preview : " + fileInfo.fileName());
+        currentPreviewDialog->setAttribute(Qt::WA_DeleteOnClose);    // 关闭时自动销毁
+        currentPreviewDialog->setWindowTitle("预览 : " + fileInfo.fileName());
         QVBoxLayout* layout = new QVBoxLayout(currentPreviewDialog);
 
-        // When the dialog is destroyed, reset the currentPreviewDialog pointer
+        // 当对话框被销毁时，重置 currentPreviewDialog 指针
         connect(currentPreviewDialog, &QObject::destroyed, this, [this](){
             currentPreviewDialog = nullptr;
         });
 
-        // Create different controls based on file type
+        // 根据文件类型创建不同的控件
         if (suffix == "txt")
         {
             QTextEdit* textEdit = new QTextEdit(currentPreviewDialog);
             textEdit->setReadOnly(true);
-            // Set a larger font
+            // 设置更大的字体
             QFont font = textEdit->font();
             font.setPointSize(11);
             textEdit->setFont(font);
@@ -4009,17 +4013,17 @@ void MainWindow::previewFile(const QModelIndex& index)
                 file.close();
             }
             else
-                textEdit->setText("Unable to open file! ");
+                textEdit->setText("无法打开文件！");
             layout->addWidget(textEdit);
         }
         else if (suffix == "png" || suffix == "jpg" ||
                  suffix == "jpeg" || suffix == "bmp")
         {
-            // Use a custom ScalableImageLabel to display images
+            // 使用自定义 ScalableImageLabel 显示图像
             ScalableImageLabel* imgLabel = new ScalableImageLabel(currentPreviewDialog);
             QPixmap pixmap(filePath);
             if (pixmap.isNull())
-                imgLabel->setText("Unable to load image! ");
+                imgLabel->setText("无法打开图像！");
             else
                 imgLabel->setPixmap(pixmap);
             layout->addWidget(imgLabel);

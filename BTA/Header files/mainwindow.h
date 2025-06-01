@@ -6,21 +6,21 @@
 #include <QThreadPool>
 #include <QDebug>
 
-// Layout
+// 布局
 #include <QSplitter>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 
-// Style
+// 样式
 #include <QFont>
 #include <QFontMetrics>
 #include <QIcon>
 
 
-// ***  Above the file area  ***
+// ***  文件区域上方  ***
 
 
-// File Operations
+// 文件操作
 #include <QFileSystemModel>
 #include <QModelIndex>
 #include <QHeaderView>
@@ -30,21 +30,21 @@
 #include <QDesktopServices>
 #include <QUrl>
 
-// Forward, Back, Refresh buttons
+// 前进后退、刷新按钮
 #include <QPushButton>
 #include <QStack>
 
-// Path buttons
+// 路径按钮
 #include <QToolButton>
 #include <QVector>
 
-// Button for copying path
+// 复制路径按钮
 #include <QPushButton>
 #include <QClipboard>
 #include <QToolTip>
 #include <QCursor>
 
-// Collect
+// 收藏
 #include <QStandardItemModel>
 #include <QStackedWidget>
 #include <QListWidget>
@@ -54,26 +54,26 @@
 #include <QJsonArray>
 #include <QPointer>
 
-// File Sort
+// 文件排序
 #include <QComboBox>
 #include <QMap>
 
-// Search
+// 搜索
 #include <QLineEdit>
 #include <QStandardItemModel>
 #include <QFutureWatcher>
 
 
-// ***  Software Features  ***
+// ***  软件功能  ***
 
 
-// Include utils
+// 引入小工具
 #include "Utils.h"
 
-// Size Progress Bar
+// Size进度条
 #include "OccupancyDisplay.h"
 
-// Right-click Menu
+// 右键菜单
 #include "RightClickMenu.h"
 #include <QAxObject>
 #include <QFileInfo>
@@ -84,12 +84,12 @@
 #include <QFutureWatcher>
 #include <QPdfWriter>
 #include <QBrush>
-// Error handling
+// 错误处理
 #include <QCheckBox>
 #include <cerrno>
 #include <cstring>
 
-// File Preview
+// 文件预览
 #include <QDialog>
 #include <QTextEdit>
 #include <QFile>
@@ -110,47 +110,46 @@ public:
     explicit MainWindow(QWidget* parent = nullptr);
     ~MainWindow();
 
-    // Whether it is in shear state
+    // 是否处于剪切状态
     bool isCut() const { return clipIsCut; }
+    // 指定路径是否在当前剪切列表中
+    bool isClipped(const QString &path) const { return clipPaths.contains(path); }
 
-    // Specifies whether the path is in current cut list
-    bool isClipped(const QString& path) const { return clipPaths.contains(path); }
-
-    // Auxiliary function for delete
-    static bool moveToRecycleBin(const QString& path);
+    // 删除的辅助函数
+    static bool moveToRecycleBin(const QString& path);   // Windows
 
 private slots:
-    // Support drag
+    // 支持拖拽过来的文件
     void handleExternalDropped(const QStringList& paths, const QModelIndex& targetIndex);
 
-    // Prefix function
+    // 前置函数
     void updateStack(const QString& path, QStack<QString>& stack);
     void updateButtons(QVector<QToolButton*>& bs, QStack<QString>& stack);
     void updateRightView();
 
-    // Double-click to open folders and files
-    void leftView_doubleClicked(const QModelIndex& index);
+    // 双击打开文件夹
+    void leftView_doubleClicked(const QModelIndex &index);
 
-    // Froward, Back buttons
+    // 前进后退按钮
     void backClicked();
     void forwardClicked();
 
-    // Refresh button
+    // 刷新按钮
     void refreshView();
 
-    // Path button
+    // 路径按钮
     void pathClicked();
 
-    // Copy Path
+    // 复制路径
     void copyPath();
 
-    // Whether to enable preview
+    // 是否开启预览
     void preview();
 
-    // Dark Mode
+    // 深色模式
     void changeDark();
 
-    // Collect
+    // 收藏
     void onlyPath();
 
     void favoritesContextMenu(const QPoint& pos);
@@ -167,14 +166,14 @@ private slots:
 
     void favoritesDialog(const QString& category);
 
-    // File Sort
+    // 文件排序
     void fileSort();
 
-    // Search
+    // 搜索
     void search();
     void handleSearchFinished();
 
-    // Right-click Menu
+    // 右键菜单
     void refreshInterface();
     void showContextMenu(const QPoint& pos);
 
@@ -199,79 +198,79 @@ private slots:
     void rename();
     void properties();
 
-    // Error handling
+    // 错误处理
     void fileDeleteError(const QString& filePath, const QString& errorMsg, QFileInfo info);
 
-    // File Preview
+    // 文件预览
     void previewFile(const QModelIndex& index);
 
 private:
     Ui::MainWindow *ui;
 
-    // Style
-    // view's overall style
+    // 样式
+    // view整体样式
     void interfaceStyle();
-    // Adjust the displayed columns
+    // 调整显示列
     void viewAdjust();
     QByteArray savedHeaderState;
-
-    // Centerpiece
-    QWidget* centralWidget;
-
-    // File System
-    QFileSystemModel* fileModel;
-    MyLeftView* leftView;
-    QTreeView* rightView;
-    SizeProgressDelegate* sizeDelegate;
-
-    // When in disk directory, cannot drag and paste
-    bool eventFilter(QObject* obj, QEvent* event) override;
-
-    // Font
-    QFont font;
 
     int buttonHeight = 47;
     int buttonWidth = 147;
     int fontSize = 11;
 
-    // Record file path
-    QStack<QString> pathStack;  // Record the segmented path to assign to path button
+    // 中心部件
+    QWidget* centralWidget;
+
+    // 文件系统
+    QFileSystemModel* fileModel;
+    MyLeftView* leftView;
+    QTreeView* rightView;
+    SizeProgressDelegate* sizeDelegate;
+
+    // 当在磁盘目录, 不能拖拽粘贴
+    bool eventFilter(QObject* obj, QEvent* event) override;
+
+    // 字体
+    QFont font;
+
+    // 记录文件路径
+    QStack<QString> pathStack;  // 记录分割后的路径, 用来分配给路径按钮
     QString rootPath = "";
     QString filePath;
     QString leftPath;
     QString rightPath;
 
-    // Froward, Back buttons
+    // 前进后退按钮
     QPushButton* backButton;
     QPushButton* forwardButton;
-    // Used to control the effectiveness of forward button (only forward after backing)
+    // 用以控制前进按钮的生效(只有后退过才能前进)
     bool backFlag = false;
 
-    // Refresh button
+    // 刷新按钮
     QPushButton* refreshButton;
 
-    // Path button
+    // 路径按钮
     QVector<QToolButton*> buttons;
     const int defaultPathButtonWidth = 70;
     const int maxPathButtonWidth = 400;
     const int moreWidth = 30;
 
-    // Button for copying path
+    // 复制路径按钮
     QPushButton* copyPathButton;
-    QClipboard* clipboard;          // Save the copied path
+    QClipboard* clipboard;          // 保存复制的路径
 
-    //　Dark mode
+    //　深色模式
     QPushButton* darkButton;
     bool isDarkMode = false;
 
-    // Favorites drop-down box
+    // 收藏下拉框
     QPushButton* fButton;
     QComboBox* collectComboBox;
     QMap<QString, QStringList> favorites;
 
-    // Favorites
+    // 收藏夹
     QDialog* fDialog;
-    QPointer<QDialog> favoritesDialogPtr;    // Point to Favorites
+    QPointer<QDialog> favoritesDialogPtr;    // 指向收藏夹
 
     bool isOnlyPath = false;
     QHBoxLayout* funcLayout;
@@ -285,15 +284,15 @@ private:
     QPushButton* upButton;
     QPushButton* downButton;
     QVector<QToolButton*> fButtons;
-    // Make upButton ineffective in the favorites list
+    // 让upButton在收藏列表中不生效
     NoClickFilter* buttonFilter = new NoClickFilter(this);
 
-    // Two views of storage: favorites list and file view
+    // 存储收藏列表和文件显示两种视图
     QStackedWidget* fStack;
     QListWidget* favoritesList;
     MyFileView* fileView;
 
-    // Update the favorites path
+    // 用于更新收藏夹路径
     QStack<QString> fPathStack;
     QString initialPath = "";
     QString mainPath = "";
@@ -301,7 +300,7 @@ private:
     QModelIndex fIdx;
     bool upFlag = false;
 
-    // Search in Favorites
+    // 收藏夹中的搜索
     QLineEdit* fSearchEdit;
     QStandardItemModel* fSearchModel;
     QFutureWatcher<QStringList> fSearchWatcher;
@@ -313,34 +312,34 @@ private:
     void moveFavorite(QListWidgetItem* item);
     void deleteFavorite(QListWidgetItem* item);
 
-    // Batch Operations
+    // 批量操作
     void moveFavorite(const QList<QListWidgetItem*>& items);
     void deleteFavorite(const QList<QListWidgetItem*>& items);
 
     // Favorites are not minimized when the main program is minimized
     void closeEvent(QCloseEvent* event) override;
 
-    // File sort
+    // 文件排序
     QComboBox* sortComboBox;
-    QMap<QString, int> sortMap;     // All sorting methods
-    QString currentSort;            // Current sorting method
-    Qt::SortOrder currentOrder;     // Descending or ascending
+    QMap<QString, int> sortMap;     // 所有排序方式
+    QString currentSort;            // 当前排序方式
+    Qt::SortOrder currentOrder;     // 降序或升序
 
-    // Search
+    // 搜索
     QLineEdit* searchEdit;
 
     QStandardItemModel* searchModel;
     QFutureWatcher<QStringList> searchWatcher;
     bool isSearch = false;
 
-    // Right-click menu
+    // 右键菜单
     RightClickMenu* rightClickMenu;
     QStringList clipPaths;
     QModelIndex currentContextIndex;
     QString currentContextPath;
 
-    // The right-click menu applies to both the main program and favorites
-    // Two variables are used to represent the current view and the selected modelindex
+    // 右键菜单适用于主程序和收藏夹
+    // 两个变量分别表示当前视图和所选的模型索引
     QAbstractItemView* contextMenuView = nullptr;
     QModelIndex contextMenuIndex;
 
@@ -350,61 +349,61 @@ private:
     QTimer* m_fakeProgressTimer = nullptr;
     int m_fakeProgressValue = 0;
 
-    bool openAsAdmin = false;       // Whether it is administrator mode
-    bool clipIsCut = false;         // Whether it is in the cutting state
+    bool openAsAdmin = false;       // 是否是管理员模式
+    bool clipIsCut = false;         // 是否在剪切状态
     QStringList categories;
 
-    // Get the file association application path
+    // 获取文件关联应用程序路径
     QString getAssociatedSW(const QString& path);
-    // Run the program with elevated privileges
+    // 提权运行程序
     bool runAsAdmin(const QString& path, const QString& params);
 
-    // Copy the entire directory
+    // 复制一整个目录
     void copyDirectory(const QString& srcPath, const QString& dstPath);
-    // Clear Clipping Status
+    // 清楚剪切状态
     void clearCutStateIfNeeded();
 
-    // Compression method
+    // 压缩方式
     QString find7z();
     void renameCompressions(const QString& path);
 
-    // Cross-platform shortcut creation
+    // 跨平台快捷方式创建
     bool createWindowsShortcut(const QString& targetPath, const QString& linkPath);
     bool createLinuxDesktopFile(const QString& targetPath, const QString& linkPath);
     bool createMacAlias(const QString& targetPath, const QString& linkPath);
 
-    // Collect
+    // 收藏
     void saveFavoritesToFile();
     void deleteFileFromFavorites();
     void loadFavoritesFromFile();
     void collect(const QString& category, const QString& path);
 
-    // Cut
-    QMap<QString, QString> cutMoveMap; // 剪切粘贴时，保存原路径到新路径的映射
+    // 剪切
+    QMap<QString, QString> cutMoveMap;    // 剪切粘贴时，保存原路径到新路径的映射
     bool isFileAvailableForCut(const QString& path, QString& errorDetail);
 
-    // Delete
+    // 删除
     FileDeleteTask* fileDeleteTask = nullptr;
     void removeFromFavorites(const QString& path);
     bool deleteWithWindowsDialog(const QStringList& paths);
     QString getDeleteErrorReason(const QString& path);
     void startAsyncDelete(const QStringList& filesToDelete, qint64 totalSize);
 
-    // Cross-platform removal
+    // 跨平台删除
     //bool moveToTrash(const QString& path);        // macOS/Linux
 
-    // File preview
+    // 文件预览
     QDialog* currentPreviewDialog = nullptr;
     QPushButton* previewButton;
     bool isPreview;
 
-    // Layout
+    // 布局
     QHBoxLayout* buttonLayout;
     QSplitter* splitter;
     QVBoxLayout* layout;
 };
 
-// This model subclass only overrides data() to reflect the gray state of the cut file
+// 这个模型子类只重写 data(), 用来反应剪切后文件的灰色状态
 class MyFileSystemModelEx : public QFileSystemModel
 {
 public:
@@ -418,11 +417,11 @@ public:
             QString path = filePath(index);
             if (mw->isClipped(path))
             {
-                // In the cut state, the cut files/folders are displayed in light gray.
+                // 在剪切状态下，剪切的文件/文件夹显示为浅灰色
                 return QBrush(Qt::lightGray);
             }
         }
-        // In all other cases, the base class is called
+        // 在所有其他情况下，使用基类
         return QFileSystemModel::data(index, role);
     }
 
@@ -430,7 +429,7 @@ private:
     MainWindow* mw;
 };
 
-// File copy task
+// 文件复制任务
 class FileCopyTask : public QObject
 {
     Q_OBJECT
@@ -455,7 +454,7 @@ private:
     QSet<QString> m_toOverwriteDirs;
 };
 
-// File delete task
+// 文件删除任务
 class FileDeleteTask : public QObject
 {
     Q_OBJECT

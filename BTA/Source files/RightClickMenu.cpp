@@ -6,19 +6,19 @@ RightClickMenu::RightClickMenu(QWidget* parent)
     isDisk = true;
     isWhiteDisk = true;
 
-    refresh = addAction("Refresh");
-    fileOpen = addAction("Open");
-    administratorRun = addAction("Run in Administrator");
+    refresh = addAction("刷新");
+    fileOpen = addAction("打开");
+    administratorRun = addAction("以管理员模式运行");
 
     addSeparator();
 
-    openWithMenu = new QMenu("Open with", this);
-    notePad = openWithMenu->addAction("Notepad");
-    chooseInWindows = openWithMenu->addAction("Select in windows");
+    openWithMenu = new QMenu("打开方式", this);
+    notePad = openWithMenu->addAction("记事本");
+    chooseInWindows = openWithMenu->addAction("在windows中选择");
 
     addMenu(openWithMenu);
 
-    compressionMenu = new QMenu("Compress to", this);
+    compressionMenu = new QMenu("压缩方式", this);
     zip = compressionMenu->addAction("zip");
     sevenZ = compressionMenu->addAction("7z");
     targz = compressionMenu->addAction("tar");
@@ -26,12 +26,12 @@ RightClickMenu::RightClickMenu(QWidget* parent)
     addMenu(compressionMenu);
     addSeparator();
 
-    collections = addAction("To favorites");
-    newCreations = new QMenu("New", this);
-    newDirectory = new QAction("Folder", this);
+    collections = addAction("加入收藏");
+    newCreations = new QMenu("新建", this);
+    newDirectory = new QAction("文件夹", this);
     newCreations->addAction(newDirectory);
-    newImage = newCreations->addAction("Image(.png)");
-    newTxt = newCreations->addAction("Text Document (.txt)");
+    newImage = newCreations->addAction("图片(.png)");
+    newTxt = newCreations->addAction("文本文档 (.txt)");
     newDocx = newCreations->addAction("Word (.docx)");
     newPdf = newCreations->addAction("PDF (.pdf)");
     newPptx = newCreations->addAction("PPT (.pptx)");
@@ -40,30 +40,30 @@ RightClickMenu::RightClickMenu(QWidget* parent)
 
     addSeparator();
 
-    pathCopy = addAction("Copy as a path");
-    shortCut = addAction("Create shortcut");
+    pathCopy = addAction("复制文件路径");
+    shortCut = addAction("创建快捷方式");
 
     addSeparator();
 
-    cut = addAction("Cut");
+    cut = addAction("剪切");
     cut->setCheckable(true);
     cut->setChecked(false);
-    copy = addAction("Copy");
+    copy = addAction("复制");
     isCopy = false;
-    paste = addAction("Paste");
+    paste = addAction("粘贴");
     paste->setVisible(false);
 
     addSeparator();
 
-    recyleBin = addAction("Delete");
-    del = addAction("Permanently Delete");
-    rename = addAction("Rename");
+    recyleBin = addAction("删除");
+    del = addAction("彻底删除");
+    rename = addAction("重命名");
 
     addSeparator();
 
-    properties = addAction("Properties");
+    properties = addAction("属性");
 
-    // Shortcut key
+    // 快捷键
     refresh->setShortcut(QKeySequence(Qt::Key_F5));
     collections->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_T));
     cut->setShortcut(QKeySequence(Qt::CTRL + Qt::Key_X));
@@ -72,7 +72,7 @@ RightClickMenu::RightClickMenu(QWidget* parent)
     del->setShortcut(QKeySequence(Qt::SHIFT + Qt::Key_Delete));
     rename->setShortcut(QKeySequence(Qt::Key_F2));
 
-    // Bind
+    // 绑定
     connect(refresh, &QAction::triggered, this, &RightClickMenu::onRefresh);
     connect(fileOpen, &QAction::triggered, this, &RightClickMenu::openFile);
     connect(administratorRun, &QAction::triggered, this, &RightClickMenu::runInAdministrator);

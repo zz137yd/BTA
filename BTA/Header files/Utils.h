@@ -1,10 +1,8 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-# include <QDebug>
-
-// 1.Only double-clicking the left button will work
-// Support receiving dragged files
+// 1、只有左键双击才能生效
+// 支持接收拖拽文件
 #include <QTreeView>
 #include <QMouseEvent>
 #include <QDropEvent>
@@ -12,35 +10,35 @@
 #include <QDragEnterEvent>
 #include <QMimeData>
 
-// 2.Center, left and right alignment
+// 2、居中左右对齐
 #include <QStyledItemDelegate>
 #include <QStyleOptionViewItem>
 
-// 3.Style of copy-path button
+// 3、复制路径按钮样式
 #include <QPushButton>
 
-// 4.Favorites drop-down box style
+// 4、收藏下拉框样式
 #include <QComboBox>
 
-// 5.Image preview adaptation
+// 5、图片预览适配
 #include <QLabel>
 #include <QPixmap>
 #include <QResizeEvent>
 
-// 6.Mouse partial event interception
+// 6、鼠标部分事件拦截
 #include <QEvent>
 
-// 7.Display content line spacing
+// 7、显示内容行间距
 
 
-// 1.Custom view (Include file drag and drop)
+// 1.自定义view (包含文件拖拽)
 class MyLeftView : public QTreeView
 {
     Q_OBJECT
 public:
     explicit MyLeftView(QWidget* parent = nullptr) : QTreeView(parent)
     {
-        // Support receiving dragged files
+        // 支持接收拖拽文件
         setAcceptDrops(true);
         setDragDropMode(QAbstractItemView::DropOnly);
     }
@@ -99,7 +97,7 @@ protected:
         QDrag* drag = new QDrag(this);
         drag->setMimeData(mimeData);
 
-        // Enforce copy-only
+        // 强制只能复制
         drag->exec(Qt::CopyAction);
     }
 };
@@ -153,7 +151,7 @@ protected:
     }
 };
 
-// 2. Center alignment
+// 居中对齐
 class CenterAlignDelegate : public QStyledItemDelegate
 {
 public:
@@ -166,7 +164,7 @@ public:
     }
 };
 
-// 2. Left alignment
+// 左对齐
 class LeftAlignDelegate : public QStyledItemDelegate
 {
 public:
@@ -179,7 +177,7 @@ public:
     }
 };
 
-// 2. Right alignment
+// 右对齐
 class RightAlignDelegate : public QStyledItemDelegate
 {
 public:
@@ -192,36 +190,36 @@ public:
     }
 };
 
-// 3.Style of copy-path button
+// 样式
 inline void buttonQss(QPushButton* button)
 {
     button->setStyleSheet(
-        // Default
+        // 默认状态
         "QPushButton {"
-        "   background-color: #ffffff;"         // Transparent background
-        "   color: #424242;"                    // Dark gray text
-        "   border: 1px solid rgba(0,0,0,0.1);" // Very thin light gray border
-        "   border-radius: 6px;"                // Round Corners
-        "   padding: 8px 12px;"                 // Padding
+        "   background-color: #ffffff;"      // 透明背景
+        "   color: #424242;"                    // 深灰色文字
+        "   border: 1px solid rgba(0,0,0,0.1);" // 极细浅灰色边框
+        "   border-radius: 6px;"                // 圆角
+        "   padding: 8px 12px;"                 // 内边距
         "}"
 
-        // Mouse hover state (slightly lit)
+        // 鼠标悬停状态（轻微亮起）
         "QPushButton:hover {"
-        "   background-color: rgba(0,0,0,0.03);" // Very light grey translucent
-        "   border-color: rgba(0,0,0,0.15);"     // Slightly darken the border
+        "   background-color: rgba(0,0,0,0.03);" // 极浅灰色半透明
+        "   border-color: rgba(0,0,0,0.15);"     // 稍微加深边框
         "}"
 
-        // Mouse down state (minimal click effect)
+        // 鼠标按下状态（极简点击效果）
         "QPushButton:pressed {"
-        "   background-color: rgba(0,0,0,0.05);" // Slightly darker grey than hover
-        "   border: 1px solid transparent;"      // Remove border
-        "   padding-top: 9px;"                   // Slight sinking effect
+        "   background-color: rgba(0,0,0,0.05);" // 比悬停稍深的灰色
+        "   border: 1px solid transparent;"      /* 移除边框 */
+        "   padding-top: 9px;"                   // 轻微下沉效果
         "   padding-bottom: 7px;"
         "}"
     );
 }
 
-// Dark mode
+// 深色模式
 inline void buttonQssDark(QPushButton* button)
 {
     button->setStyleSheet(
@@ -245,7 +243,7 @@ inline void buttonQssDark(QPushButton* button)
     );
 }
 
-// 4.Favorites drop-down box style
+// 4、收藏下拉框样式
 inline void comboboxQss(QComboBox* box)
 {
     box->setStyleSheet(R"(
@@ -368,7 +366,7 @@ inline void comboboxQssDark(QComboBox* box)
     )");
 }
 
-// 5.Image preview adaptation
+// 图片预览适配
 class ScalableImageLabel : public QLabel
 {
 public:
@@ -386,7 +384,7 @@ public:
     }
 
 protected:
-    // Recalculate the scale every time the control changes size
+    // 每次控件改变大小时重新计算比例
     void resizeEvent(QResizeEvent* event) override
     {
         QLabel::resizeEvent(event);
@@ -402,8 +400,7 @@ private:
             QLabel::setPixmap(originalPixmap.scaled(size(), Qt::KeepAspectRatio, Qt::SmoothTransformation));
     }
 };
-
-// 6.Mouse partial event interception
+// 鼠标部分事件拦截
 class NoClickFilter : public QObject
 {
     Q_OBJECT
@@ -413,7 +410,7 @@ public:
 protected:
     bool eventFilter(QObject* watched, QEvent* event) override
     {
-        // Only intercept mouse related events
+        // 只拦截鼠标相关事件
         if (event->type() == QEvent::MouseButtonPress ||
             event->type() == QEvent::MouseButtonRelease ||
             event->type() == QEvent::MouseButtonDblClick ||
@@ -436,19 +433,19 @@ public:
 protected:
     bool eventFilter(QObject* watched, QEvent* ev) override
     {
-        // If it is a right-click double-click event, block it
+        // 如果是鼠标右键双击事件就屏蔽掉
         if (ev->type() == QEvent::MouseButtonDblClick)
         {
             auto* me = static_cast<QMouseEvent*>(ev);
             if (me->button() == Qt::RightButton) return true;
         }
 
-        // All other events are allowed
+        // 允许所有其他事件
         return QObject::eventFilter(watched, ev);
     }
 };
 
-// Display content line spacing
+// 显示内容行间距
 class SpacingDelegate : public QStyledItemDelegate
 {
     Q_OBJECT

@@ -24,9 +24,8 @@
 #include <QJsonObject>
 #include <QStandardPaths>
 
-// Background tasks:
-// Use QDirIterator to traverse the directory
-// while lowering thread priority and giving up the CPU when appropriate
+// 后台任务:
+// 使用 QDirIterator 遍历目录，同时降低线程优先级和适时让出 CPU
 class DirectorySizeWorker : public QObject, public QRunnable
 {
    Q_OBJECT
@@ -38,7 +37,7 @@ public:
    }
    void run() override
    {
-       // Reduce thread priority to avoid high occupancy
+       // 降低线程优先级以避免高占用率
        QThread::currentThread()->setPriority(QThread::LowPriority);
        qint64 size = computeSize(m_path);
        emit sizeComputed(m_path, size);
@@ -57,7 +56,7 @@ private:
        {
            it.next();
            totalSize += it.fileInfo().size();
-           // After processing 1000 files, let go of the CPU for a while
+           // 处理完 1000 个文件后，让出CPU一会儿
            if (++counter % 1000 == 0)
            {
                QThread::yieldCurrentThread();
@@ -162,7 +161,7 @@ public:
            }
            else
            {
-               // If the directory is not calculated, submit the task asynchronously
+               // 如果目录没有计算，则异步提交任务
                if (!pendingPaths.contains(path))
                {
                    pendingPaths.insert(path);
@@ -173,7 +172,7 @@ public:
                        sizeCache.insert(p, s);
                        pendingPaths.remove(p);
 
-                       // Batch refresh interface
+                       // 批量刷新接口
                        const_cast<SizeProgressDelegate*>(this)->emitRequestUpdate();
                        const_cast<SizeProgressDelegate*>(this)->saveCacheToFile("");
                    });
@@ -230,40 +229,40 @@ public:
        QString text = formatSize(currentSizeBytes);
 
        QRect rect = option.rect;
-       int radius = rect.height() / 2;    // Set a reference fillet radius
+       int radius = rect.height() / 2;    // 设定一个参考圆角半径
 
        painter->save();
        painter->setRenderHint(QPainter::Antialiasing, true);
 
-       // Draw the background: a slightly gray translucent effect, similar to frosted glass effect
+       // 绘制背景: 带一点灰色的半透明效果，类似毛玻璃效果
        QColor backgroundColor(247, 247, 247, 247);
        painter->setPen(Qt::NoPen);
        painter->setBrush(backgroundColor);
        painter->drawRoundedRect(rect, radius, radius);
 
-       // Drawing progress bar: light purple
+       // 绘制进度条: 浅紫色
        int progressWidth = rect.width() * progress / 100;
        QRect progressRect(rect.x(), rect.y(), progressWidth, rect.height());
-       QColor progressColor(200, 150, 255);    // Light purple
+       QColor progressColor(200, 150, 255);    // 浅紫色
 
        if (progressWidth > 0)
        {
-           // Dynamically adjust the corner radius
-           // Ensure that the left and right sides are always rounded
+           // 动态调整圆角半径
+           // 确保左右两侧始终保持圆角
            int dynamicRadius = qMin(radius, progressWidth / 2);
            painter->setBrush(progressColor);
            painter->drawRoundedRect(progressRect, dynamicRadius, dynamicRadius);
        }
 
-       // Draw progress text
+       // 绘制进度文本
        painter->setPen(Qt::black);
        painter->drawText(rect, Qt::AlignCenter, text);
 
        painter->restore();
    }
 
-   QHash<QString, qint64>& getSizeCache() { return sizeCache; }
-   QSet<QString>& getPendingPaths() { return pendingPaths; }
+    QHash<QString, qint64>& getSizeCache() { return sizeCache; }
+    QSet<QString>& getPendingPaths() { return pendingPaths; }
 
 signals:
    void requestUpdate();
