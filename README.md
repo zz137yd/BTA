@@ -10,6 +10,8 @@ Qt version : 5.14.2
 
 | 🌍 Language | 📦 Version | 🔗 Link |
 |-------------|------------|---------|
+| uk English | 1.1 | [Download](https://github.com/zz137yd/BTA/releases/tag/E-1.1) |
+| 🇨🇳 Chinese | 1.1 | [下载](https://github.com/zz137yd/BTA/releases/tag/C-1.1) |
 | uk English | 1.0 | [Download](https://github.com/zz137yd/BTA/releases/tag/E-1.0) |
 | 🇨🇳 Chinese | 1.0 | [下载](https://github.com/zz137yd/BTA/releases/tag/C-1.0) |
 
