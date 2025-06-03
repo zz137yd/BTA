@@ -18,7 +18,7 @@ Qt version : 5.14.2
 ---
 
 ### 📌 Favorites Mechanism
-> Include four favorites: **work**, **personal**, **key**, and **leisure** . Users can choose to add files or folders to favorites for quick access.
+> Include four favorites: **work**, **personal**, **key**, and **leisure** . Users can choose to add files or folders to favorites for quick access.<br/>
 > You can regard Favorites as a small file manager.
 
 ### 📊 Size Progress Bar
